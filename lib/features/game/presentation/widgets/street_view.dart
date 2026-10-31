@@ -30,7 +30,7 @@ class _StreetViewState extends ConsumerState<StreetView>
 
   // Placeholder URLs as requested; user will host custom images later.
   static const String weberCatUrl =
-      'https://raw.githubusercontent.com/tiribsil/superweber/main/assets/weber_idle.gif';
+      'https://raw.githubusercontent.com/tiribsil/superweber/main/assets/weber_idle.png';
   static const String carSpriteUrl =
       'https://raw.githubusercontent.com/tiribsil/superweber/main/assets/car_red.png';
 
@@ -57,6 +57,7 @@ class _StreetViewState extends ConsumerState<StreetView>
   void dispose() {
     _parallaxController.dispose();
     _hopController.dispose();
+    _carController.dispose();
     super.dispose();
   }
 
@@ -142,7 +143,7 @@ class _StreetViewState extends ConsumerState<StreetView>
                 ),
               ),
 
-              // 2. Weber Cat Sprite (Animated GIF with vertical bounce and squish squash)
+              // 2. Weber Cat Sprite
               AnimatedBuilder(
                 animation: _hopController,
                 builder: (context, child) {
@@ -152,12 +153,14 @@ class _StreetViewState extends ConsumerState<StreetView>
 
                   return Positioned(
                     left: 14,
-                    top: weberTop + hop.dy,
+                    top: weberTop,
                     width: weberSize,
                     height: weberSize,
                     child: Transform(
                       alignment: Alignment.bottomCenter,
-                      transform: Matrix4.diagonal3Values(hop.scaleX, hop.scaleY, 1.0),
+                      transform: Matrix4.identity()
+                        ..translateByDouble(0.0, hop.dy, 0.0, 1.0)
+                        ..scaleByDouble(hop.scaleX, hop.scaleY, 1.0, 1.0),
                       child: child,
                     ),
                   );
@@ -216,16 +219,12 @@ class _StreetViewState extends ConsumerState<StreetView>
                     animation: _carController,
                     builder: (context, child) {
                       final t = _carController.value;
-
                       final slant = 0.1 * math.sin(t * 2 * math.pi);
-
                       final squish = 0.2 * math.sin(t * 4 * math.pi);
-                      final scaleX = 1.0 + squish;
-                      final scaleY = 1.0 - squish;
 
                       final transform = Matrix4.identity()
                         ..multiply(Matrix4.skewX(slant))
-                        ..multiply(Matrix4.diagonal3Values(scaleX, scaleY, 1.0));
+                        ..multiply(Matrix4.diagonal3Values(1.0 + squish, 1.0 - squish, 1.0));
 
                       return Transform(
                         alignment: Alignment.bottomCenter,
@@ -233,17 +232,14 @@ class _StreetViewState extends ConsumerState<StreetView>
                         child: child,
                       );
                     },
-                    child: Positioned(
-                      left: carCurrentX.clamp(carEndX, carStartX),
-                      child: Image.network(
-                        carSpriteUrl,
-                        fit: BoxFit.contain,
-                        height: 70,
-                        errorBuilder: (context, error, stackTrace) => const Icon(
-                          Icons.directions_car,
-                          color: Colors.white,
-                          size: 32,
-                        ),
+                    child: Image.network(
+                      carSpriteUrl,
+                      fit: BoxFit.contain,
+                      height: 70,
+                      errorBuilder: (context, error, stackTrace) => const Icon(
+                        Icons.directions_car,
+                        color: Colors.white,
+                        size: 32,
                       ),
                     ),
                   ),
@@ -289,31 +285,33 @@ class _StreetParallaxPainter extends CustomPainter {
   final Color roadColor;
   final Color lineColor;
 
+  // Crie as tintas uma única vez:
+  final Paint _roadPaint = Paint();
+  final Paint _curbPaint = Paint()
+    ..strokeWidth = 2.0
+    ..style = PaintingStyle.stroke;
+  final Paint _dashPaint = Paint()..strokeWidth = 3.0;
+
   _StreetParallaxPainter({
     required this.offset,
     required this.roadColor,
     required this.lineColor,
-  });
+  }) {
+    _roadPaint.color = roadColor;
+    _curbPaint.color = Colors.grey.shade600;
+    _dashPaint.color = lineColor.withValues(alpha: 0.85);
+  }
 
   @override
   void paint(Canvas canvas, Size size) {
     // Road surface
-    final roadPaint = Paint()..color = roadColor;
-    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), roadPaint);
+    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), _roadPaint);
 
     // Curb borders
-    final curbPaint = Paint()
-      ..color = Colors.grey.shade600
-      ..strokeWidth = 2.0
-      ..style = PaintingStyle.stroke;
-    canvas.drawLine(const Offset(0, 2), Offset(size.width, 2), curbPaint);
-    canvas.drawLine(Offset(0, size.height - 2), Offset(size.width, size.height - 2), curbPaint);
+    canvas.drawLine(const Offset(0, 2), Offset(size.width, 2), _curbPaint);
+    canvas.drawLine(Offset(0, size.height - 2), Offset(size.width, size.height - 2), _curbPaint);
 
-    // Dashed center markings with parallax scroll
-    final dashPaint = Paint()
-      ..color = lineColor.withValues(alpha: 0.85)
-      ..strokeWidth = 3.0;
-
+    // Dashed center markings
     const dashWidth = 24.0;
     const dashSpace = 20.0;
     const totalCycle = dashWidth + dashSpace;
@@ -326,7 +324,7 @@ class _StreetParallaxPainter extends CustomPainter {
         canvas.drawLine(
           Offset(currentX, midY),
           Offset(currentX + dashWidth, midY),
-          dashPaint,
+          _dashPaint,
         );
       }
       currentX += totalCycle;
