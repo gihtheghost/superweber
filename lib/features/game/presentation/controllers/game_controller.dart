@@ -22,10 +22,10 @@ class GameController extends Notifier<GameState> {
 
   void _startTimer() {
     _timer?.cancel();
-    _timer = Timer.periodic(const Duration(milliseconds: 1000), (timer) {
+    _timer = Timer.periodic(const Duration(milliseconds: 5000), (timer) {
       if (state.isGameOver || state.isExploding) return;
 
-      final newTime = state.timeRemaining - 1;
+      final newTime = state.timeRemaining - 5;
       if (newTime <= 0) {
         _handleCarHitWeber();
       } else {

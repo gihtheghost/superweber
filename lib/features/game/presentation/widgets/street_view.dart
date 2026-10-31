@@ -26,22 +26,28 @@ class _StreetViewState extends ConsumerState<StreetView>
     with TickerProviderStateMixin {
   late final AnimationController _parallaxController;
   late final AnimationController _hopController;
+  late final AnimationController _carController;
 
   // Placeholder URLs as requested; user will host custom images later.
   static const String weberCatUrl =
-      'https://raw.githubusercontent.com/tiribsil/weber/master/public/images/weber_idle.gif';
+      'https://raw.githubusercontent.com/tiribsil/superweber/main/assets/weber_idle.gif';
   static const String carSpriteUrl =
-      'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=160&q=80';
+      'https://raw.githubusercontent.com/tiribsil/superweber/main/assets/car_red.png';
 
   @override
   void initState() {
     super.initState();
     _parallaxController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 4),
+      duration: const Duration(seconds: 1),
     )..repeat();
 
     _hopController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 750),
+    )..repeat();
+
+    _carController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 750),
     )..repeat();
@@ -107,9 +113,10 @@ class _StreetViewState extends ConsumerState<StreetView>
 
         // Car position: travels from streetWidth - 90 down to Weber at ~60
         final progress = gameState.carProgress;
-        final weberMargin = 6.0;
+        final weberMargin = 6;
         final weberSize = (streetHeight - (weberMargin * 2)).clamp(40.0, 160.0);
-        final weberTop = (streetHeight - weberSize) / 2;
+        final weberTop = (streetHeight - weberSize) / 0.5;
+        final carMargin = 0.0;
         final carEndX = 14.0 + weberSize + 8.0;
         final carCurrentX = carStartX - (progress * (carStartX - carEndX));
 
@@ -128,7 +135,7 @@ class _StreetViewState extends ConsumerState<StreetView>
                         roadColor: theme.brightness == Brightness.dark
                             ? const Color(0xFF212121)
                             : const Color(0xFF37474F),
-                        lineColor: Colors.amberAccent,
+                        lineColor: Colors.white,
                       ),
                     );
                   },
@@ -204,64 +211,43 @@ class _StreetViewState extends ConsumerState<StreetView>
               else
                 Positioned(
                   left: carCurrentX.clamp(carEndX, carStartX),
-                  bottom: 12,
-                  child: Container(
-                    width: 70,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: Colors.redAccent,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.white, width: 1.5),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Colors.black45,
-                          blurRadius: 6,
-                          offset: Offset(0, 3),
+                  bottom: carMargin,
+                  child: AnimatedBuilder(
+                    animation: _carController,
+                    builder: (context, child) {
+                      final t = _carController.value;
+
+                      final slant = 0.1 * math.sin(t * 2 * math.pi);
+
+                      final squish = 0.2 * math.sin(t * 4 * math.pi);
+                      final scaleX = 1.0 + squish;
+                      final scaleY = 1.0 - squish;
+
+                      final transform = Matrix4.identity()
+                        ..multiply(Matrix4.skewX(slant))
+                        ..multiply(Matrix4.diagonal3Values(scaleX, scaleY, 1.0));
+
+                      return Transform(
+                        alignment: Alignment.bottomCenter,
+                        transform: transform,
+                        child: child,
+                      );
+                    },
+                    child: Positioned(
+                      left: carCurrentX.clamp(carEndX, carStartX),
+                      child: Image.network(
+                        carSpriteUrl,
+                        fit: BoxFit.contain,
+                        height: 70,
+                        errorBuilder: (context, error, stackTrace) => const Icon(
+                          Icons.directions_car,
+                          color: Colors.white,
+                          size: 32,
                         ),
-                      ],
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(6),
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          Image.network(
-                            carSpriteUrl,
-                            fit: BoxFit.cover,
-                            width: 70,
-                            height: 48,
-                            errorBuilder: (context, error, stackTrace) => const Icon(
-                              Icons.directions_car,
-                              color: Colors.white,
-                              size: 32,
-                            ),
-                          ),
-                          // Plate number badge on car
-                          Positioned(
-                            bottom: 2,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                              decoration: BoxDecoration(
-                                color: Colors.black87,
-                                borderRadius: BorderRadius.circular(3),
-                              ),
-                              child: Text(
-                                gameState.plateString,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 1,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
                       ),
                     ),
                   ),
                 ),
-
               // 4. Top Overlay HUD (Score badge on top-right)
               Positioned(
                 top: 8,
@@ -287,21 +273,6 @@ class _StreetViewState extends ConsumerState<StreetView>
                         ),
                       ),
                     ],
-                  ),
-                ),
-              ),
-
-              // 5. Timer progress bar at the very top of street
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                child: LinearProgressIndicator(
-                  value: (gameState.timeRemaining / gameState.totalTime).clamp(0.0, 1.0),
-                  minHeight: 3,
-                  backgroundColor: Colors.transparent,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    gameState.timeRemaining < 5.0 ? Colors.redAccent : Colors.amberAccent,
                   ),
                 ),
               ),
