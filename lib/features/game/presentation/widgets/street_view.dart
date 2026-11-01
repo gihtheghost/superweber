@@ -23,14 +23,19 @@ class StreetView extends ConsumerStatefulWidget {
 }
 
 class _StreetViewState extends ConsumerState<StreetView>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late final AnimationController _animController;
+  late final AnimationController _roadController;
 
   // Placeholder URLs as requested; user will host custom images later.
   static const String weberCatUrl =
       'https://raw.githubusercontent.com/tiribsil/superweber/main/assets/weber_idle.png';
   static const String carSpriteUrl =
       'https://raw.githubusercontent.com/tiribsil/superweber/main/assets/car_red.png';
+  static const String explosionSpriteUrl =
+      'https://raw.githubusercontent.com/tiribsil/superweber/main/assets/explosion.gif';
+  static const String roadTileUrl =
+      'https://raw.githubusercontent.com/tiribsil/superweber/main/assets/rua.png';
 
   @override
   void initState() {
@@ -39,11 +44,17 @@ class _StreetViewState extends ConsumerState<StreetView>
       vsync: this,
       duration: const Duration(milliseconds: 750),
     )..repeat();
+
+    _roadController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 12),
+    )..repeat();
   }
 
   @override
   void dispose() {
     _animController.dispose();
+    _roadController.dispose();
     super.dispose();
   }
 
@@ -101,10 +112,10 @@ class _StreetViewState extends ConsumerState<StreetView>
 
           // Car position: travels from streetWidth - 90 down to Weber at ~60
           final progress = gameState.carProgress;
-          final weberMargin = 6;
-          final weberSize = (streetHeight - (weberMargin * 2)).clamp(40.0, 160.0);
-          final weberTop = (streetHeight - weberSize) / 0.5;
-          final carMargin = 0.0;
+          final weberMargin = 6.0;
+          final weberSize = 80.0;
+          final carMargin = 10.0;
+          final carSize = 70.0;
           final carEndX = 14.0 + weberSize + 8.0;
           final carCurrentX = carStartX - (progress * (carStartX - carEndX));
 
@@ -114,16 +125,31 @@ class _StreetViewState extends ConsumerState<StreetView>
                 // 1. Parallax Street Background
                 Positioned.fill(
                   child: AnimatedBuilder(
-                    animation: _animController,
-                    builder: (context, child) {
-                      final offset = _animController.value;
-                      return CustomPaint(
-                        painter: _StreetParallaxPainter(
-                          offset: offset,
-                          roadColor: theme.brightness == Brightness.dark
-                              ? const Color(0xFF212121)
-                              : const Color(0xFF37474F),
-                          lineColor: Colors.white,
+                    animation: _roadController,
+                    builder: (context, _) {
+                      final offset = _roadController.value;
+
+                      const double imgOriginalWidth = 1920;
+                      const double imgOriginalHeight = 216;
+
+                      final tileWidth = streetHeight * (imgOriginalWidth / imgOriginalHeight);
+                      final shift = -(offset * tileWidth);
+
+                      return ClipRect(
+                        child: Stack(
+                          children: [
+                            for (double x = shift; x < streetWidth + tileWidth; x += tileWidth)
+                              Positioned(
+                                left: x,
+                                top: 0,
+                                bottom: 0,
+                                width: tileWidth,
+                                child: Image.network(
+                                  roadTileUrl,
+                                  fit: BoxFit.fitHeight,
+                                ),
+                              ),
+                          ],
                         ),
                       );
                     },
@@ -140,7 +166,7 @@ class _StreetViewState extends ConsumerState<StreetView>
 
                     return Positioned(
                       left: 14,
-                      top: weberTop,
+                      bottom: weberMargin,
                       width: weberSize,
                       height: weberSize,
                       child: Transform(
@@ -166,36 +192,18 @@ class _StreetViewState extends ConsumerState<StreetView>
                 // 3. Incoming Car or Explosion Effect
                 if (gameState.isExploding)
                   Positioned(
-                    left: carCurrentX - 20,
-                    bottom: 0,
-                    child: TweenAnimationBuilder<double>(
-                      duration: const Duration(milliseconds: 700),
-                      tween: Tween(begin: 0.6, end: 1.4),
-                      builder: (context, scale, child) {
-                        return Transform.scale(
-                          scale: scale,
-                          child: Container(
-                            width: 80,
-                            height: 80,
-                            decoration: const BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.orangeAccent,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.deepOrange,
-                                  blurRadius: 25,
-                                  spreadRadius: 10,
-                                ),
-                              ],
-                            ),
-                            child: const Icon(
-                              Icons.local_fire_department,
-                              color: Colors.white,
-                              size: 50,
-                            ),
-                          ),
-                        );
-                      },
+                    left: carCurrentX,
+                    bottom: -40,
+                    child: Image.network(
+                      explosionSpriteUrl,
+                      key: ValueKey(gameState.score),
+                      height: 200,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) => const Icon(
+                        Icons.local_fire_department,
+                        color: Colors.orangeAccent,
+                        size: 50,
+                      ),
                     ),
                   )
                 else
@@ -222,7 +230,7 @@ class _StreetViewState extends ConsumerState<StreetView>
                       child: Image.network(
                         carSpriteUrl,
                         fit: BoxFit.contain,
-                        height: 70,
+                        height: carSize,
                         errorBuilder: (context, error, stackTrace) => const Icon(
                           Icons.directions_car,
                           color: Colors.white,
@@ -266,62 +274,4 @@ class _StreetViewState extends ConsumerState<StreetView>
       )
     );
   }
-}
-
-class _StreetParallaxPainter extends CustomPainter {
-  final double offset;
-  final Color roadColor;
-  final Color lineColor;
-
-  // Crie as tintas uma única vez:
-  static final Paint _roadPaint = Paint();
-  static final Paint _curbPaint = Paint()
-    ..strokeWidth = 2.0
-    ..style = PaintingStyle.stroke;
-  static final Paint _dashPaint = Paint()..strokeWidth = 3.0;
-
-  _StreetParallaxPainter({
-    required this.offset,
-    required this.roadColor,
-    required this.lineColor,
-  }) {
-    _roadPaint.color = roadColor;
-    _curbPaint.color = Colors.grey.shade600;
-    _dashPaint.color = lineColor.withValues(alpha: 0.85);
-  }
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    // Road surface
-    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), _roadPaint);
-
-    // Curb borders
-    canvas.drawLine(const Offset(0, 2), Offset(size.width, 2), _curbPaint);
-    canvas.drawLine(Offset(0, size.height - 2), Offset(size.width, size.height - 2), _curbPaint);
-
-    // Dashed center markings
-    const dashWidth = 24.0;
-    const dashSpace = 20.0;
-    const totalCycle = dashWidth + dashSpace;
-    final startShift = -(offset * totalCycle);
-
-    final midY = size.height * 0.55;
-    double currentX = startShift;
-    while (currentX < size.width) {
-      if (currentX + dashWidth > 0) {
-        canvas.drawLine(
-          Offset(currentX, midY),
-          Offset(currentX + dashWidth, midY),
-          _dashPaint,
-        );
-      }
-      currentX += totalCycle;
-    }
-  }
-
-  @override
-  bool shouldRepaint(_StreetParallaxPainter oldDelegate) =>
-      oldDelegate.offset != offset ||
-      oldDelegate.roadColor != roadColor ||
-      oldDelegate.lineColor != lineColor;
 }
