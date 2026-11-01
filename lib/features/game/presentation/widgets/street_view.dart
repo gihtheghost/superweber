@@ -23,10 +23,8 @@ class StreetView extends ConsumerStatefulWidget {
 }
 
 class _StreetViewState extends ConsumerState<StreetView>
-    with TickerProviderStateMixin {
-  late final AnimationController _parallaxController;
-  late final AnimationController _hopController;
-  late final AnimationController _carController;
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _animController;
 
   // Placeholder URLs as requested; user will host custom images later.
   static const String weberCatUrl =
@@ -37,17 +35,7 @@ class _StreetViewState extends ConsumerState<StreetView>
   @override
   void initState() {
     super.initState();
-    _parallaxController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 1),
-    )..repeat();
-
-    _hopController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 750),
-    )..repeat();
-
-    _carController = AnimationController(
+    _animController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 750),
     )..repeat();
@@ -55,9 +43,7 @@ class _StreetViewState extends ConsumerState<StreetView>
 
   @override
   void dispose() {
-    _parallaxController.dispose();
-    _hopController.dispose();
-    _carController.dispose();
+    _animController.dispose();
     super.dispose();
   }
 
@@ -106,176 +92,178 @@ class _StreetViewState extends ConsumerState<StreetView>
     final gameState = ref.watch(gameControllerProvider);
     final theme = Theme.of(context);
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final streetWidth = constraints.maxWidth;
-        final streetHeight = constraints.maxHeight;
-        final carStartX = (streetWidth - 90.0).clamp(100.0, 2000.0);
+    return RepaintBoundary(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final streetWidth = constraints.maxWidth;
+          final streetHeight = constraints.maxHeight;
+          final carStartX = (streetWidth - 90.0).clamp(100.0, 2000.0);
 
-        // Car position: travels from streetWidth - 90 down to Weber at ~60
-        final progress = gameState.carProgress;
-        final weberMargin = 6;
-        final weberSize = (streetHeight - (weberMargin * 2)).clamp(40.0, 160.0);
-        final weberTop = (streetHeight - weberSize) / 0.5;
-        final carMargin = 0.0;
-        final carEndX = 14.0 + weberSize + 8.0;
-        final carCurrentX = carStartX - (progress * (carStartX - carEndX));
+          // Car position: travels from streetWidth - 90 down to Weber at ~60
+          final progress = gameState.carProgress;
+          final weberMargin = 6;
+          final weberSize = (streetHeight - (weberMargin * 2)).clamp(40.0, 160.0);
+          final weberTop = (streetHeight - weberSize) / 0.5;
+          final carMargin = 0.0;
+          final carEndX = 14.0 + weberSize + 8.0;
+          final carCurrentX = carStartX - (progress * (carStartX - carEndX));
 
-        return ClipRect(
-          child: Stack(
-            children: [
-              // 1. Parallax Street Background
-              Positioned.fill(
-                child: AnimatedBuilder(
-                  animation: _parallaxController,
+          return ClipRect(
+            child: Stack(
+              children: [
+                // 1. Parallax Street Background
+                Positioned.fill(
+                  child: AnimatedBuilder(
+                    animation: _animController,
+                    builder: (context, child) {
+                      final offset = _animController.value;
+                      return CustomPaint(
+                        painter: _StreetParallaxPainter(
+                          offset: offset,
+                          roadColor: theme.brightness == Brightness.dark
+                              ? const Color(0xFF212121)
+                              : const Color(0xFF37474F),
+                          lineColor: Colors.white,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+
+                // 2. Weber Cat Sprite
+                AnimatedBuilder(
+                  animation: _animController,
                   builder: (context, child) {
-                    final offset = _parallaxController.value;
-                    return CustomPaint(
-                      painter: _StreetParallaxPainter(
-                        offset: offset,
-                        roadColor: theme.brightness == Brightness.dark
-                            ? const Color(0xFF212121)
-                            : const Color(0xFF37474F),
-                        lineColor: Colors.white,
+                    final t = _animController.value;
+                    final maxJump = (weberSize * 0.18).clamp(8.0, 24.0);
+                    final hop = _calculateWeberHop(t, maxJump);
+
+                    return Positioned(
+                      left: 14,
+                      top: weberTop,
+                      width: weberSize,
+                      height: weberSize,
+                      child: Transform(
+                        alignment: Alignment.bottomCenter,
+                        transform: Matrix4.identity()
+                          ..translateByDouble(0.0, hop.dy, 0.0, 1.0)
+                          ..scaleByDouble(hop.scaleX, hop.scaleY, 1.0, 1.0),
+                        child: child,
                       ),
                     );
                   },
-                ),
-              ),
-
-              // 2. Weber Cat Sprite
-              AnimatedBuilder(
-                animation: _hopController,
-                builder: (context, child) {
-                  final t = _hopController.value;
-                  final maxJump = (weberSize * 0.18).clamp(8.0, 24.0);
-                  final hop = _calculateWeberHop(t, maxJump);
-
-                  return Positioned(
-                    left: 14,
-                    top: weberTop,
-                    width: weberSize,
-                    height: weberSize,
-                    child: Transform(
-                      alignment: Alignment.bottomCenter,
-                      transform: Matrix4.identity()
-                        ..translateByDouble(0.0, hop.dy, 0.0, 1.0)
-                        ..scaleByDouble(hop.scaleX, hop.scaleY, 1.0, 1.0),
-                      child: child,
-                    ),
-                  );
-                },
-                child: Image.network(
-                  weberCatUrl,
-                  fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) => const Icon(
-                    Icons.pets,
-                    color: Colors.white,
-                    size: 42,
-                  ),
-                ),
-              ),
-
-              // 3. Incoming Car or Explosion Effect
-              if (gameState.isExploding)
-                Positioned(
-                  left: carCurrentX - 20,
-                  bottom: 0,
-                  child: TweenAnimationBuilder<double>(
-                    duration: const Duration(milliseconds: 700),
-                    tween: Tween(begin: 0.6, end: 1.4),
-                    builder: (context, scale, child) {
-                      return Transform.scale(
-                        scale: scale,
-                        child: Container(
-                          width: 80,
-                          height: 80,
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.orangeAccent,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.deepOrange,
-                                blurRadius: 25,
-                                spreadRadius: 10,
-                              ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.local_fire_department,
-                            color: Colors.white,
-                            size: 50,
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                )
-              else
-                Positioned(
-                  left: carCurrentX.clamp(carEndX, carStartX),
-                  bottom: carMargin,
-                  child: AnimatedBuilder(
-                    animation: _carController,
-                    builder: (context, child) {
-                      final t = _carController.value;
-                      final slant = 0.1 * math.sin(t * 2 * math.pi);
-                      final squish = 0.2 * math.sin(t * 4 * math.pi);
-
-                      final transform = Matrix4.identity()
-                        ..multiply(Matrix4.skewX(slant))
-                        ..multiply(Matrix4.diagonal3Values(1.0 + squish, 1.0 - squish, 1.0));
-
-                      return Transform(
-                        alignment: Alignment.bottomCenter,
-                        transform: transform,
-                        child: child,
-                      );
-                    },
-                    child: Image.network(
-                      carSpriteUrl,
-                      fit: BoxFit.contain,
-                      height: 70,
-                      errorBuilder: (context, error, stackTrace) => const Icon(
-                        Icons.directions_car,
-                        color: Colors.white,
-                        size: 32,
-                      ),
+                  child: Image.network(
+                    weberCatUrl,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) => const Icon(
+                      Icons.pets,
+                      color: Colors.white,
+                      size: 42,
                     ),
                   ),
                 ),
-              // 4. Top Overlay HUD (Score badge on top-right)
-              Positioned(
-                top: 8,
-                right: 12,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.black54,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.amberAccent, width: 1),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.flash_on, color: Colors.amberAccent, size: 16),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${gameState.score}',
-                        style: const TextStyle(
+
+                // 3. Incoming Car or Explosion Effect
+                if (gameState.isExploding)
+                  Positioned(
+                    left: carCurrentX - 20,
+                    bottom: 0,
+                    child: TweenAnimationBuilder<double>(
+                      duration: const Duration(milliseconds: 700),
+                      tween: Tween(begin: 0.6, end: 1.4),
+                      builder: (context, scale, child) {
+                        return Transform.scale(
+                          scale: scale,
+                          child: Container(
+                            width: 80,
+                            height: 80,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.orangeAccent,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.deepOrange,
+                                  blurRadius: 25,
+                                  spreadRadius: 10,
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.local_fire_department,
+                              color: Colors.white,
+                              size: 50,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  )
+                else
+                  Positioned(
+                    left: carCurrentX.clamp(carEndX, carStartX),
+                    bottom: carMargin,
+                    child: AnimatedBuilder(
+                      animation: _animController,
+                      builder: (context, child) {
+                        final t = _animController.value;
+                        final slant = 0.1 * math.sin(t * 2 * math.pi);
+                        final squish = 0.2 * math.sin(t * 4 * math.pi);
+
+                        final transform = Matrix4.identity()
+                          ..multiply(Matrix4.skewX(slant))
+                          ..multiply(Matrix4.diagonal3Values(1.0 + squish, 1.0 - squish, 1.0));
+
+                        return Transform(
+                          alignment: Alignment.bottomCenter,
+                          transform: transform,
+                          child: child,
+                        );
+                      },
+                      child: Image.network(
+                        carSpriteUrl,
+                        fit: BoxFit.contain,
+                        height: 70,
+                        errorBuilder: (context, error, stackTrace) => const Icon(
+                          Icons.directions_car,
                           color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
+                          size: 32,
                         ),
                       ),
-                    ],
+                    ),
+                  ),
+                // 4. Top Overlay HUD (Score badge on top-right)
+                Positioned(
+                  top: 8,
+                  right: 12,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.black54,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.amberAccent, width: 1),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.flash_on, color: Colors.amberAccent, size: 16),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${gameState.score}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ),
-        );
-      },
+              ],
+            ),
+          );
+        },
+      )
     );
   }
 }
@@ -286,11 +274,11 @@ class _StreetParallaxPainter extends CustomPainter {
   final Color lineColor;
 
   // Crie as tintas uma única vez:
-  final Paint _roadPaint = Paint();
-  final Paint _curbPaint = Paint()
+  static final Paint _roadPaint = Paint();
+  static final Paint _curbPaint = Paint()
     ..strokeWidth = 2.0
     ..style = PaintingStyle.stroke;
-  final Paint _dashPaint = Paint()..strokeWidth = 3.0;
+  static final Paint _dashPaint = Paint()..strokeWidth = 3.0;
 
   _StreetParallaxPainter({
     required this.offset,
