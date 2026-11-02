@@ -53,6 +53,13 @@ class MindView extends ConsumerStatefulWidget {
 }
 
 class _MindViewState extends ConsumerState<MindView> {
+  static const String weberSombraUrl =
+      'https://raw.githubusercontent.com/tiribsil/superweber/main/assets/weber_sombra.png';
+  static const String cerebroUrl =
+      'https://raw.githubusercontent.com/tiribsil/superweber/main/assets/cerebro.png';
+  static const String placaUrl =
+      'https://raw.githubusercontent.com/tiribsil/superweber/main/assets/placa.png';
+
   final GlobalKey _plateKey = GlobalKey();
   final List<GlobalKey> _digitKeys = List.generate(4, (_) => GlobalKey());
   final Map<String, GlobalKey> _operatorKeys = {};
@@ -193,127 +200,137 @@ class _MindViewState extends ConsumerState<MindView> {
 
   @override
   Widget build(BuildContext context) {
+
     final gameState = ref.watch(gameControllerProvider);
     final gameNotifier = ref.read(gameControllerProvider.notifier);
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
 
-    return Container(
-      color: theme.colorScheme.surface,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          // 1. Brain Silhouette - completely dark inside without pulsating animation
-          Positioned.fill(
-            child: CustomPaint(
-              painter: _BrainSilhouettePainter(
-                fillColor: const Color(0xFF0D0D12),
-                strokeColor: theme.colorScheme.primary.withValues(alpha: 0.35),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final maxWidth = constraints.maxWidth;
+        final maxHeight = constraints.maxHeight;
+
+        return Container(
+        color: theme.colorScheme.surface,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            // 1. Sombra do Weber (Fundo: preenche a altura sem esticar horizontalmente)
+            Positioned.fill(
+              child: Image.network( // ou Image.asset se for local
+                weberSombraUrl,
+                fit: BoxFit.fitHeight,
+                alignment: Alignment.center,
               ),
             ),
-          ),
-
-          // 2. Active Brain Interactive Content Area
-          SafeArea(
-            child: Column(
-              children: [
-                // Top control bar: Hearts under Weber on the left & Skip / Surrender buttons on the right
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // Hearts representing lives (positioned directly under Weber)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.surfaceContainerHigh.withValues(alpha: 0.6),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.2)),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: List.generate(9, (index) {
-                            final isAlive = index < gameState.hp;
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 1.0),
-                              child: Icon(
-                                isAlive ? Icons.favorite : Icons.favorite_border,
-                                color: isAlive ? Colors.redAccent : theme.colorScheme.outline.withValues(alpha: 0.4),
-                                size: 16,
-                              ),
-                            );
-                          }),
-                        ),
-                      ),
-
-                      // Actions: Skip plate (mandatory per spec rule 67) & Surrender (adjustment 9)
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          FilledButton.tonalIcon(
-                            icon: const Icon(Icons.skip_next, size: 18),
-                            label: Text(l10n.translate('skip')),
-                            onPressed: () => gameNotifier.skipPlate(),
-                          ),
-                          const SizedBox(width: 8),
-                          FilledButton.tonalIcon(
-                            style: FilledButton.styleFrom(
-                              foregroundColor: theme.colorScheme.error,
-                            ),
-                            icon: const Icon(Icons.flag_outlined, size: 18),
-                            label: Text(l10n.translate('surrender')),
-                            onPressed: () => gameNotifier.surrender(),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Error / Status banner
-                if (gameState.lastError != null)
-                  Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.redAccent.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.redAccent),
-                    ),
-                    child: Text(
-                      gameState.lastError!,
-                      style: const TextStyle(
-                        color: Colors.redAccent,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-
-                const Spacer(flex: 1),
-
-                // Spatial drag-and-drop equation plate
-                _buildPlateWithSlots(context, gameState, gameNotifier),
-
-                const SizedBox(height: 18),
-
-                // LaTeX Formula Display
-                _buildLatexDisplay(context, gameState),
-
-                const Spacer(flex: 2),
-
-                // Draggable Operators Palette Tray with Clear Button outside
-                _buildOperatorsArea(context, gameState, gameNotifier, l10n),
-
-                const SizedBox(height: 12),
-              ],
+            
+            // 2. Cérebro do Weber (na frente da sombra)
+            Positioned(
+              height: maxHeight * 0.6, // Permite que a imagem do cérebro se ajuste à altura do Stack
+              child: Image.network( // ou Image.asset se for local
+                cerebroUrl,
+                fit: BoxFit.contain, // Mantém a proporção do cérebro centralizado
+                alignment: Alignment.center,
+              ),
             ),
-          ),
-        ],
-      ),
-    );
+
+            // 2. Active Brain Interactive Content Area
+            SafeArea(
+              child: Column(
+                children: [
+                  // Top control bar: Hearts under Weber on the left & Skip / Surrender buttons on the right
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Hearts representing lives (positioned directly under Weber)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.surfaceContainerHigh.withValues(alpha: 0.6),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.2)),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: List.generate(9, (index) {
+                              final isAlive = index < gameState.hp;
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 1.0),
+                                child: Icon(
+                                  isAlive ? Icons.favorite : Icons.favorite_border,
+                                  color: isAlive ? Colors.redAccent : theme.colorScheme.outline.withValues(alpha: 0.4),
+                                  size: 16,
+                                ),
+                              );
+                            }),
+                          ),
+                        ),
+
+                        // Actions: Skip plate (mandatory per spec rule 67) & Surrender (adjustment 9)
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            FilledButton.tonalIcon(
+                              icon: const Icon(Icons.skip_next, size: 18),
+                              label: Text(l10n.translate('skip')),
+                              onPressed: () => gameNotifier.skipPlate(),
+                            ),
+                            const SizedBox(width: 8),
+                            FilledButton.tonalIcon(
+                              style: FilledButton.styleFrom(
+                                foregroundColor: theme.colorScheme.error,
+                              ),
+                              icon: const Icon(Icons.flag_outlined, size: 18),
+                              label: Text(l10n.translate('surrender')),
+                              onPressed: () => gameNotifier.surrender(),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Error / Status banner
+                  if (gameState.lastError != null)
+                    Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.redAccent.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.redAccent),
+                      ),
+                      child: Text(
+                        gameState.lastError!,
+                        style: const TextStyle(
+                          color: Colors.redAccent,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+
+                  const Spacer(flex: 1),
+
+                  // Spatial drag-and-drop equation plate
+                  _buildPlateWithSlots(context, gameState, gameNotifier),
+
+                  // LaTeX Formula Display
+                  _buildLatexDisplay(context, gameState),
+
+                  // Draggable Operators Palette Tray with Clear Button outside
+                  _buildOperatorsArea(context, gameState, gameNotifier, l10n),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    });
   }
 
   Widget _buildPlateWithSlots(
@@ -382,16 +399,19 @@ class _MindViewState extends ConsumerState<MindView> {
 
         return Container(
           key: _plateKey,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           margin: const EdgeInsets.symmetric(horizontal: 8),
-          constraints: const BoxConstraints(minHeight: 70),
+          constraints: const BoxConstraints(
+            minHeight: 75, // Garante que a placa já tenha um tamanho inicial bonito
+          ),
           decoration: BoxDecoration(
-            color: isHovered
-                ? Colors.white.withValues(alpha: 0.04)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(16),
+            image: const DecorationImage(
+              image: NetworkImage(placaUrl), // ou AssetImage(placaUrl)
+              fit: BoxFit.fill, // A placa estica confortavelmente conforme novos operadores entram
+            ),
+            borderRadius: BorderRadius.circular(12),
             border: isHovered
-                ? Border.all(color: Colors.amberAccent.withValues(alpha: 0.3), width: 1.5)
+                ? Border.all(color: Colors.amberAccent, width: 2.5)
                 : null,
           ),
           child: SingleChildScrollView(
@@ -433,18 +453,11 @@ class _MindViewState extends ConsumerState<MindView> {
       child: Text(
         '${item.digit}',
         style: const TextStyle(
-          color: Colors.white,
+          color: Colors.black,
           fontSize: 44,
           fontWeight: FontWeight.w900,
           fontFamily: 'Courier',
           letterSpacing: 1,
-          shadows: [
-            Shadow(
-              color: Colors.black87,
-              blurRadius: 6,
-              offset: Offset(0, 2),
-            ),
-          ],
         ),
       ),
     );
@@ -659,56 +672,4 @@ class _MindViewState extends ConsumerState<MindView> {
       ),
     );
   }
-}
-
-class _BrainSilhouettePainter extends CustomPainter {
-  final Color fillColor;
-  final Color strokeColor;
-
-  _BrainSilhouettePainter({
-    required this.fillColor,
-    required this.strokeColor,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final w = size.width;
-    final h = size.height;
-
-    // Cat head silhouette path
-    final path = Path();
-    path.moveTo(w * 0.12, h * 0.95);
-    // Left cheek
-    path.quadraticBezierTo(w * 0.05, h * 0.55, w * 0.18, h * 0.32);
-    // Left ear outer edge
-    path.lineTo(w * 0.16, h * 0.08);
-    // Left ear inner edge
-    path.lineTo(w * 0.38, h * 0.22);
-    // Head top curvature between ears
-    path.quadraticBezierTo(w * 0.50, h * 0.18, w * 0.62, h * 0.22);
-    // Right ear inner edge
-    path.lineTo(w * 0.84, h * 0.08);
-    // Right ear outer edge
-    path.lineTo(w * 0.82, h * 0.32);
-    // Right cheek
-    path.quadraticBezierTo(w * 0.95, h * 0.55, w * 0.88, h * 0.95);
-    path.close();
-
-    // Fill completely dark inside
-    final fillPaint = Paint()
-      ..color = fillColor
-      ..style = PaintingStyle.fill;
-    canvas.drawPath(path, fillPaint);
-
-    // Subtle outline
-    final strokePaint = Paint()
-      ..color = strokeColor
-      ..strokeWidth = 2.0
-      ..style = PaintingStyle.stroke;
-    canvas.drawPath(path, strokePaint);
-  }
-
-  @override
-  bool shouldRepaint(_BrainSilhouettePainter oldDelegate) =>
-      oldDelegate.fillColor != fillColor || oldDelegate.strokeColor != strokeColor;
 }
