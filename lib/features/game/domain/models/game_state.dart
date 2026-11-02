@@ -31,7 +31,7 @@ class GameState {
     this.lastError,
   });
 
-  static const int maxHp = 9;
+  static const int maxHp = 3;
   static const double defaultCarDuration = 100.0;
 
   factory GameState.initial({DifficultyLevel difficulty = DifficultyLevel.easy}) {
