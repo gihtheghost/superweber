@@ -35,7 +35,7 @@ class GameState {
   static const double defaultCarDuration = 100.0;
 
   factory GameState.initial({DifficultyLevel difficulty = DifficultyLevel.easy}) {
-    final initialDigits = [8, 1, 3, 1];
+    final initialDigits = [1, 1, 1, 1];
     final initialSlots = [
       <OperatorToken>[],
       <OperatorToken>[],

@@ -112,10 +112,10 @@ class _StreetViewState extends ConsumerState<StreetView>
 
           // Car position: travels from streetWidth - 90 down to Weber at ~60
           final progress = gameState.carProgress;
-          final weberMargin = 6.0;
-          final weberSize = 80.0;
-          final carMargin = 10.0;
-          final carSize = 70.0;
+          final weberMargin = streetHeight * 0.05;
+          final weberSize = streetHeight * 0.75;
+          final carMargin = streetHeight * 0.08;
+          final carSize = streetHeight * 0.7;
           final carEndX = 14.0 + weberSize + 8.0;
           final carCurrentX = carStartX - (progress * (carStartX - carEndX));
 
@@ -193,11 +193,11 @@ class _StreetViewState extends ConsumerState<StreetView>
                 if (gameState.isExploding)
                   Positioned(
                     left: carCurrentX,
-                    bottom: -40,
+                    bottom: carMargin - (carSize * 0.8),
                     child: Image.network(
                       explosionSpriteUrl,
                       key: ValueKey(gameState.score),
-                      height: 200,
+                      height: carSize * 2.5,
                       fit: BoxFit.contain,
                       errorBuilder: (context, error, stackTrace) => const Icon(
                         Icons.local_fire_department,
