@@ -548,7 +548,6 @@ class _MindViewState extends ConsumerState<MindView> {
               image: NetworkImage(placaUrl), // ou AssetImage(placaUrl)
               fit: BoxFit.fill, // A placa estica confortavelmente conforme novos operadores entram
             ),
-            borderRadius: BorderRadius.circular(12),
             border: isHovered
                 ? Border.all(color: Colors.amberAccent, width: 2.5)
                 : null,
@@ -685,29 +684,29 @@ class _MindViewState extends ConsumerState<MindView> {
                 fontWeight: FontWeight.bold,
               ),
               mathStyle: MathStyle.display,
-              onErrorFallback: (err) => Text(
-                latex,
-                style: TextStyle(
-                  fontSize: formulaFontSize * 0.82,
-                  color: theme.colorScheme.onSurface,
-                  fontFamily: 'monospace',
-                ),
-              ),
+              // onErrorFallback: (err) => Text(
+              //   latex,
+              //   style: TextStyle(
+              //     fontSize: formulaFontSize * 0.82,
+              //     color: theme.colorScheme.onSurface,
+              //     fontFamily: 'monospace',
+              //   ),
+              // ),
             ),
           ),
-          if (state.evaluation.errorMessage != null &&
-              !state.evaluation.isSolved)
-            Padding(
-              padding: const EdgeInsets.only(top: 6.0),
-              child: Text(
-                state.evaluation.errorMessage!,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: theme.colorScheme.error,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
+          // if (state.evaluation.errorMessage != null &&
+          //     !state.evaluation.isSolved)
+          //   Padding(
+          //     padding: const EdgeInsets.only(top: 6.0),
+          //     child: Text(
+          //       state.evaluation.errorMessage!,
+          //       style: TextStyle(
+          //         fontSize: 11,
+          //         color: theme.colorScheme.error,
+          //         fontWeight: FontWeight.w600,
+          //       ),
+          //     ),
+          //   ),
         ],
       ),
     );
@@ -735,9 +734,14 @@ class _MindViewState extends ConsumerState<MindView> {
   ) {
     final theme = Theme.of(context);
     final available = state.difficulty.availableOperators;
+    final chipSpacing = (scale * 6).clamp(4.0, 8.0).toDouble();
+    final trayMaxHeight = chipSize * 2 + chipSpacing + (24 * scale) + 2;
 
     return Container(
-      constraints: BoxConstraints(maxWidth: maxWidth * 0.95),
+      constraints: BoxConstraints(
+        maxWidth: maxWidth * 0.95,
+        maxHeight: trayMaxHeight,
+      ),
       margin: EdgeInsets.zero,
       padding: EdgeInsets.all(12 * scale),
       decoration: BoxDecoration(
@@ -750,47 +754,50 @@ class _MindViewState extends ConsumerState<MindView> {
           BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, 3)),
         ],
       ),
-      child: Wrap(
-        spacing: (scale * 6).clamp(4.0, 8.0),
-        runSpacing: (scale * 6).clamp(4.0, 8.0),
-        alignment: WrapAlignment.center,
-        children: available.map((op) {
-          return Draggable<OperatorToken>(
-            data: op,
-            feedback: Material(
-              color: Colors.transparent,
-              child: Container(
-                width: chipSize,
-                height: chipSize,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.6),
-                      blurRadius: 12,
-                      spreadRadius: 3,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.vertical,
+        child: Wrap(
+          spacing: chipSpacing,
+          runSpacing: chipSpacing,
+          alignment: WrapAlignment.center,
+          children: available.map((op) {
+            return Draggable<OperatorToken>(
+              data: op,
+              feedback: Material(
+                color: Colors.transparent,
+                child: Container(
+                  width: chipSize,
+                  height: chipSize,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: theme.colorScheme.primary.withValues(alpha: 0.6),
+                        blurRadius: 12,
+                        spreadRadius: 3,
+                      ),
+                    ],
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    op.label,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: chipSize * 0.42,
+                      fontWeight: FontWeight.bold,
                     ),
-                  ],
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  op.label,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: chipSize * 0.42,
-                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
-            ),
-            childWhenDragging: Opacity(
-              opacity: 0.3,
+              childWhenDragging: Opacity(
+                opacity: 0.3,
+                child: _buildOperatorChip(context, op, chipSize),
+              ),
               child: _buildOperatorChip(context, op, chipSize),
-            ),
-            child: _buildOperatorChip(context, op, chipSize),
-          );
-        }).toList(),
+            );
+          }).toList(),
+        ),
       ),
     );
   }
