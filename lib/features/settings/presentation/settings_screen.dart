@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
 import '../../../core/audio/sound_controller.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/theme/theme_provider.dart';
@@ -47,7 +49,9 @@ class SettingsScreen extends ConsumerWidget {
             children: [
               // (a) Theme Mode
               Card(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
@@ -55,7 +59,9 @@ class SettingsScreen extends ConsumerWidget {
                     children: [
                       Text(
                         l10n.translate('theme_mode'),
-                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       const SizedBox(height: 12),
                       SegmentedButton<ThemeMode>(
@@ -90,7 +96,9 @@ class SettingsScreen extends ConsumerWidget {
 
               // (b) Font Size
               Card(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
@@ -101,7 +109,9 @@ class SettingsScreen extends ConsumerWidget {
                         children: [
                           Text(
                             l10n.translate('font_size'),
-                            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                           Text('${(themeState.fontSizeScale * 100).round()}%'),
                         ],
@@ -125,7 +135,9 @@ class SettingsScreen extends ConsumerWidget {
 
               // (c) Font Family
               Card(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
@@ -133,17 +145,26 @@ class SettingsScreen extends ConsumerWidget {
                     children: [
                       Text(
                         l10n.translate('font_family'),
-                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       const SizedBox(height: 12),
                       DropdownButtonFormField<String>(
                         initialValue: themeState.fontFamily,
                         decoration: InputDecoration(
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
                         ),
                         items: availableFonts
-                            .map((f) => DropdownMenuItem(value: f, child: Text(f)))
+                            .map(
+                              (f) => DropdownMenuItem(value: f, child: Text(f)),
+                            )
                             .toList(),
                         onChanged: (f) {
                           if (f != null) {
@@ -160,7 +181,9 @@ class SettingsScreen extends ConsumerWidget {
 
               // (d) Seed Color
               Card(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
@@ -168,14 +191,18 @@ class SettingsScreen extends ConsumerWidget {
                     children: [
                       Text(
                         l10n.translate('seed_color'),
-                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       const SizedBox(height: 12),
                       Wrap(
                         spacing: 12,
                         runSpacing: 12,
                         children: presetColors.map((color) {
-                          final isSelected = themeState.seedColor.toARGB32() == color.toARGB32();
+                          final isSelected =
+                              themeState.seedColor.toARGB32() ==
+                              color.toARGB32();
                           return InkWell(
                             onTap: () => themeNotifier.setSeedColor(color),
                             borderRadius: BorderRadius.circular(20),
@@ -186,7 +213,9 @@ class SettingsScreen extends ConsumerWidget {
                                 color: color,
                                 shape: BoxShape.circle,
                                 border: Border.all(
-                                  color: isSelected ? Colors.white : Colors.transparent,
+                                  color: isSelected
+                                      ? Colors.white
+                                      : Colors.transparent,
                                   width: 3,
                                 ),
                                 boxShadow: [
@@ -199,7 +228,11 @@ class SettingsScreen extends ConsumerWidget {
                                 ],
                               ),
                               child: isSelected
-                                  ? const Icon(Icons.check, color: Colors.white, size: 20)
+                                  ? const Icon(
+                                      Icons.check,
+                                      color: Colors.white,
+                                      size: 20,
+                                    )
                                   : null,
                             ),
                           );
@@ -214,18 +247,38 @@ class SettingsScreen extends ConsumerWidget {
 
               // Audio toggle
               Card(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
                 child: SwitchListTile(
                   title: Text(
                     l10n.translate('sound'),
-                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   subtitle: Text(
-                    soundEnabled ? l10n.translate('sound_on') : l10n.translate('sound_off'),
+                    soundEnabled
+                        ? l10n.translate('sound_on')
+                        : l10n.translate('sound_off'),
                   ),
                   value: soundEnabled,
                   onChanged: (val) => soundNotifier.setEnabled(val),
                 ),
+              ),
+
+              const SizedBox(height: 12),
+
+              OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(48),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                icon: const Icon(Icons.login),
+                label: Text(l10n.translate('back_to_login')),
+                onPressed: () => context.go('/login'),
               ),
             ],
           ),

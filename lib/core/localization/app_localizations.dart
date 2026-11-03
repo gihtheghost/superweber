@@ -22,7 +22,8 @@ class AppLocalizations {
   static final Map<String, Map<String, String>> _localizedValues = {
     'pt': {
       'app_title': 'SuperWeber',
-      'team_members': 'Desenvolvedores: Ti Ribeiro Silvério & Giovanna Vieira Gaeta',
+      'team_members':
+          'Desenvolvedores: Ti Ribeiro Silvério & Giovanna Vieira Gaeta',
       'login_title': 'Entrar no SuperWeber',
       'select_language': 'Idioma',
       'portuguese': 'Português',
@@ -31,6 +32,7 @@ class AppLocalizations {
       'settings': 'Configurações',
       'help': 'Ajuda',
       'sign_out': 'Sair',
+      'back_to_login': 'Voltar para o login',
       'difficulty': 'Dificuldade',
       'easy': 'Fácil',
       'intermediate': 'Intermediário',
@@ -57,7 +59,8 @@ class AppLocalizations {
       'sound_on': 'Ligado',
       'sound_off': 'Desligado (Padrão)',
       'help_title': 'Como Jogar o SuperWeber',
-      'help_content': 'Você é o Weber, um gato com poderes destrutivos! Ele destrói carros com sua mente resolvendo equações formadas com os 4 dígitos da placa do carro.\n\n'
+      'help_content':
+          'Você é o Weber, um gato com poderes destrutivos! Ele destrói carros com sua mente resolvendo equações formadas com os 4 dígitos da placa do carro.\n\n'
           '• Arraste os operadores para os slots antes, entre e depois dos dígitos.\n'
           '• É obrigatório inserir ao menos um operador entre cada par de dígitos.\n'
           '• Insira ao menos um sinal de igual (=) para validar a equação.\n'
@@ -69,7 +72,8 @@ class AppLocalizations {
       'error_div_zero': 'Divisão por zero não é permitida.',
       'error_overflow': 'Resultado excede o limite máximo de 10.000.',
       'error_invalid_eq': 'Equação inválida ou lados desiguais.',
-      'error_non_integer_div': 'Divisão não inteira permitida apenas no nível Fácil.',
+      'error_non_integer_div':
+          'Divisão não inteira permitida apenas no nível Fácil.',
       'records_title': 'Placas Resolvidas',
       'loading': 'Carregando dados...',
       'no_records': 'Nenhuma placa resolvida ainda.',
@@ -85,6 +89,7 @@ class AppLocalizations {
       'settings': 'Settings',
       'help': 'Help',
       'sign_out': 'Sign Out',
+      'back_to_login': 'Back to login',
       'difficulty': 'Difficulty',
       'easy': 'Easy',
       'intermediate': 'Intermediate',
@@ -111,7 +116,8 @@ class AppLocalizations {
       'sound_on': 'Enabled',
       'sound_off': 'Muted (Default)',
       'help_title': 'How to Play SuperWeber',
-      'help_content': 'You are Weber, a cat with psychic destructive powers! Weber destroys cars with his mind by balancing equations formed from 4-digit license plates.\n\n'
+      'help_content':
+          'You are Weber, a cat with psychic destructive powers! Weber destroys cars with his mind by balancing equations formed from 4-digit license plates.\n\n'
           '• Drag and drop operators into slots before, between, and after digits.\n'
           '• You must insert at least one operator between each consecutive digit pair.\n'
           '• You must include at least one equals sign (=) to win.\n'
@@ -123,7 +129,8 @@ class AppLocalizations {
       'error_div_zero': 'Division by zero is not permitted.',
       'error_overflow': 'Result exceeds the maximum limit of 10,000.',
       'error_invalid_eq': 'Invalid equation or sides are not equal.',
-      'error_non_integer_div': 'Fractional division is only allowed in Easy mode.',
+      'error_non_integer_div':
+          'Fractional division is only allowed in Easy mode.',
       'records_title': 'Solved Plates',
       'loading': 'Loading data...',
       'no_records': 'No solved plates yet.',
