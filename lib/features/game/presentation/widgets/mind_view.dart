@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -46,6 +48,110 @@ class _TargetGap {
   const _TargetGap(this.slotIndex, this.insertIndex);
 }
 
+class MultiSlicePlatePainter extends CustomPainter {
+  static const double leftBorderWidth = 230.0;
+  static const double rightBorderWidth = 250.0;
+
+  // Source-image pixel coordinates: adjust these around the BRASIL lettering
+  // and flag so the entire header artwork remains in the fixed center slice.
+  static const double centerStartX = 700.0;
+  static const double centerEndX = centerStartX + 450.0;
+
+  final ui.Image image;
+
+  const MultiSlicePlatePainter({required this.image});
+
+  double minimumWidthForHeight(double height) {
+    final scale = height / image.height;
+    final rightEdge = image.width - rightBorderWidth;
+    final safeCenterStart = centerStartX.clamp(leftBorderWidth, rightEdge);
+    final safeCenterEnd = centerEndX.clamp(safeCenterStart, rightEdge);
+    return (leftBorderWidth +
+            safeCenterEnd -
+            safeCenterStart +
+            rightBorderWidth) *
+        scale;
+  }
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (size.isEmpty) return;
+
+    final sourceWidth = image.width.toDouble();
+    final sourceHeight = image.height.toDouble();
+    final rightEdge = sourceWidth - rightBorderWidth;
+    final centerStart = centerStartX.clamp(leftBorderWidth, rightEdge);
+    final centerEnd = centerEndX.clamp(centerStart, rightEdge);
+    final heightScale = size.height / sourceHeight;
+
+    final leftFixedWidth = leftBorderWidth * heightScale;
+    final centerFixedWidth = (centerEnd - centerStart) * heightScale;
+    final rightFixedWidth = rightBorderWidth * heightScale;
+    final stretchWidth =
+        ((size.width - leftFixedWidth - centerFixedWidth - rightFixedWidth) / 2)
+            .clamp(0.0, double.infinity);
+
+    final paint = Paint()..filterQuality = FilterQuality.medium;
+
+    // Tiny overlap prevents antialiasing/raster rounding from exposing seams.
+    const double bleed = 0.5;
+
+    void drawSlice(
+      double sourceX,
+      double sourceSliceWidth,
+      double destinationX,
+      double destinationSliceWidth, {
+      bool isLast = false,
+    }) {
+      if (sourceSliceWidth <= 0 || destinationSliceWidth <= 0) return;
+      canvas.drawImageRect(
+        image,
+        Rect.fromLTWH(sourceX, 0, sourceSliceWidth, sourceHeight),
+        Rect.fromLTWH(
+          destinationX,
+          0,
+          destinationSliceWidth + (isLast ? 0.0 : bleed),
+          size.height,
+        ),
+        paint,
+      );
+    }
+
+    // 1. Fixed left border.
+    drawSlice(0, leftBorderWidth, 0, leftFixedWidth);
+
+    // 2. Left blank stretch zone.
+    drawSlice(
+      leftBorderWidth,
+      centerStart - leftBorderWidth,
+      leftFixedWidth,
+      stretchWidth,
+    );
+
+    // 3. Fixed center artwork (BRASIL and flag).
+    final centerDstX = leftFixedWidth + stretchWidth;
+    final centerWidth = centerEnd - centerStart;
+    drawSlice(centerStart, centerWidth, centerDstX, centerFixedWidth);
+
+    // 4. Right blank stretch zone.
+    final rightStretchDstX = centerDstX + centerFixedWidth;
+    drawSlice(centerEnd, rightEdge - centerEnd, rightStretchDstX, stretchWidth);
+
+    // 5. Fixed right border; it ends at the plate edge, so no bleed is needed.
+    drawSlice(
+      rightEdge,
+      sourceWidth - rightEdge,
+      rightStretchDstX + stretchWidth,
+      rightFixedWidth,
+      isLast: true,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant MultiSlicePlatePainter oldDelegate) =>
+      oldDelegate.image != image;
+}
+
 class MindView extends ConsumerStatefulWidget {
   const MindView({super.key});
 
@@ -64,8 +170,43 @@ class _MindViewState extends ConsumerState<MindView> {
   final GlobalKey _plateKey = GlobalKey();
   final List<GlobalKey> _digitKeys = List.generate(4, (_) => GlobalKey());
   final Map<String, GlobalKey> _operatorKeys = {};
+  ImageStream? _plateImageStream;
+  ImageStreamListener? _plateImageListener;
+  ui.Image? _plateImage;
 
   int? _hoverGapIndex;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _plateImageStream?.removeListener(_plateImageListener!);
+
+    final imageStream = NetworkImage(placaUrl)
+        .resolve(createLocalImageConfiguration(context));
+    _plateImageListener = ImageStreamListener(
+      (imageInfo, synchronousCall) {
+        final nextImage = imageInfo.image.clone();
+        final previousImage = _plateImage;
+        _plateImage = nextImage;
+        previousImage?.dispose();
+        if (mounted) setState(() {});
+      },
+      onError: (Object error, StackTrace? stackTrace) {
+        // Keep the solid plate background if the network image cannot load.
+      },
+    );
+    _plateImageStream = imageStream;
+    imageStream.addListener(_plateImageListener!);
+  }
+
+  @override
+  void dispose() {
+    if (_plateImageListener case final listener?) {
+      _plateImageStream?.removeListener(listener);
+    }
+    _plateImage?.dispose();
+    super.dispose();
+  }
 
   GlobalKey _getOperatorKey(int slotIndex, int tokenIndex) {
     final id = '$slotIndex:$tokenIndex';
@@ -582,28 +723,41 @@ class _MindViewState extends ConsumerState<MindView> {
           rowChildren.add(_buildInsertionIndicator(digitFontSize));
         }
 
-        return Container(
-          key: _plateKey,
-          padding: EdgeInsets.fromLTRB(
-            20 * scale,
-            20 * scale,
-            20 * scale,
-            4 * scale,
-          ),
-          margin: EdgeInsets.zero,
-          decoration: BoxDecoration(
-            image: const DecorationImage(
-              image: NetworkImage(placaUrl), // ou AssetImage(placaUrl)
-              fit: BoxFit.fill, // A placa estica confortavelmente conforme novos operadores entram
+        final plateImage = _plateImage;
+        final painter = plateImage == null
+            ? null
+            : MultiSlicePlatePainter(image: plateImage);
+        final expectedPlateHeight = digitFontSize * 1.25 + 28 * scale;
+
+        return CustomPaint(
+          painter: painter,
+          child: Container(
+            key: _plateKey,
+            constraints: painter == null
+                ? null
+                : BoxConstraints(
+                    minWidth: painter.minimumWidthForHeight(
+                      expectedPlateHeight,
+                    ),
+                  ),
+            padding: EdgeInsets.fromLTRB(
+              20 * scale,
+              20 * scale,
+              20 * scale,
+              4 * scale,
             ),
-            border: isHovered
-                ? Border.all(color: Colors.amberAccent, width: 2.5)
-                : null,
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: rowChildren,
+            margin: EdgeInsets.zero,
+            decoration: BoxDecoration(
+              color: plateImage == null ? const Color(0xFFD8B177) : null,
+              border: isHovered
+                  ? Border.all(color: Colors.amberAccent, width: 2.5)
+                  : null,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: rowChildren,
+            ),
           ),
         );
       },
