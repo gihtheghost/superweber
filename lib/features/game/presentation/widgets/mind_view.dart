@@ -423,46 +423,84 @@ class _MindViewState extends ConsumerState<MindView> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          // Hearts representing lives (positioned directly under Weber)
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: maxWidth < 380 ? 4 : 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.surfaceContainerHigh
-                                  .withValues(alpha: 0.6),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: theme.colorScheme.outline.withValues(
-                                  alpha: 0.2,
+                          // Lives and score are grouped at the top-left of Weber's mind.
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: maxWidth < 380 ? 4 : 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.surfaceContainerHigh
+                                      .withValues(alpha: 0.6),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: theme.colorScheme.outline.withValues(
+                                      alpha: 0.2,
+                                    ),
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: List.generate(3, (index) {
+                                    final isAlive = index < gameState.hp;
+                                    return Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 1.0,
+                                      ),
+                                      child: Icon(
+                                        isAlive
+                                            ? Icons.favorite
+                                            : Icons.favorite_border,
+                                        color: isAlive
+                                            ? Colors.redAccent
+                                            : theme.colorScheme.outline
+                                                  .withValues(alpha: 0.4),
+                                        size: (maxWidth * 0.035)
+                                            .clamp(12.0, 16.0)
+                                            .toDouble(),
+                                      ),
+                                    );
+                                  }),
                                 ),
                               ),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: List.generate(3, (index) {
-                                final isAlive = index < gameState.hp;
-                                return Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 1.0,
+                              const SizedBox(height: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.black54,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: Colors.amberAccent,
+                                    width: 1,
                                   ),
-                                  child: Icon(
-                                    isAlive
-                                        ? Icons.favorite
-                                        : Icons.favorite_border,
-                                    color: isAlive
-                                        ? Colors.redAccent
-                                        : theme.colorScheme.outline.withValues(
-                                            alpha: 0.4,
-                                          ),
-                                    size: (maxWidth * 0.035)
-                                        .clamp(12.0, 16.0)
-                                        .toDouble(),
-                                  ),
-                                );
-                              }),
-                            ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Text(
+                                      '🚗💥',
+                                      style: TextStyle(fontSize: 16),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      '${gameState.score}',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
 
                           // Actions: Skip plate (mandatory per spec rule 67) & Surrender (adjustment 9)

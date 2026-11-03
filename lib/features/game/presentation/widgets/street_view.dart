@@ -139,7 +139,7 @@ class _StreetViewState extends ConsumerState<StreetView>
           final weberSize = streetHeight * 0.75;
           final carMargin = streetHeight * 0.08;
           final carSize = streetHeight * 0.7;
-          final carEndX = 14.0 + weberSize + 8.0;
+          final carEndX = weberSize / 2;
           final carStartX = streetWidth - carSize;
 
           return ClipRect(
@@ -281,41 +281,6 @@ class _StreetViewState extends ConsumerState<StreetView>
                       );
                     },
                   ),
-                // 4. Top Overlay HUD (Score badge on top-right)
-                Positioned(
-                  top: 8,
-                  right: 12,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.black54,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.amberAccent, width: 1),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Icons.flash_on,
-                          color: Colors.amberAccent,
-                          size: 16,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${gameState.score}',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
               ],
             ),
           );
