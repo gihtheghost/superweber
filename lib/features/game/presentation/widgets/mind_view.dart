@@ -237,11 +237,12 @@ class _MindViewState extends ConsumerState<MindView> {
             ? constraints.maxHeight
             : MediaQuery.sizeOf(context).height;
         final scale = (maxWidth / 400).clamp(0.75, 1.25).toDouble();
-        final chipSize = (maxWidth * 0.05).clamp(36.0, 52.0).toDouble();
-        final digitFontSize = (maxWidth * 0.09).clamp(24.0, 44.0).toDouble();
+        final heightScale = (maxHeight / 580).clamp(0.85, 1.4).toDouble();
+        final chipSize = ((maxWidth * 0.05).clamp(36.0, 52.0) * heightScale)
+            .clamp(32.0, 64.0)
+            .toDouble();
         final compactActions = maxWidth < 380;
         final horizontalInset = maxWidth < 380 ? 8.0 : 16.0;
-        const plateActionExtent = 56.0; // 48px button + 8px gap.
 
         return Container(
           color: theme.colorScheme.surface,
@@ -257,19 +258,17 @@ class _MindViewState extends ConsumerState<MindView> {
                 ),
               ),
 
-              // 2. Cérebro do Weber (na frente da sombra)
-              Positioned(
-                height: maxHeight * 0.6, // Permite que a imagem do cérebro se ajuste à altura do Stack
-                child: Image.network(
-                  // ou Image.asset se for local
-                  cerebroUrl,
-                  fit: BoxFit
-                      .contain, // Mantém a proporção do cérebro centralizado
-                  alignment: Alignment.center,
-                ),
+              // Keep the brain and plate behind the foreground formula and controls.
+              _buildBrainWithPlate(
+                context,
+                gameState,
+                gameNotifier,
+                l10n,
+                maxHeight,
+                chipSize,
               ),
 
-              // 2. Active Brain Interactive Content Area
+              // Active Brain Interactive Content Area
               SafeArea(
                 child: Column(
                   children: [
@@ -401,67 +400,113 @@ class _MindViewState extends ConsumerState<MindView> {
                     const Spacer(),
 
                     // LaTeX Formula Display
-                    _buildLatexDisplay(context, gameState, maxWidth),
+                    _buildLatexDisplay(
+                      context,
+                      gameState,
+                      maxWidth,
+                      heightScale,
+                    ),
 
-                    SizedBox(height: 4 * scale),
+                    SizedBox(height: 4 * heightScale),
 
                     // Draggable operators palette tray
                     _buildOperatorsArea(
                       context,
                       gameState,
                       maxWidth,
-                      scale,
+                      heightScale,
                       chipSize,
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8 * heightScale),
                   ],
-                ),
-              ),
-
-              // Spatial drag-and-drop equation plate
-              Positioned(
-                top: maxHeight * 0.33,
-                left: 0,
-                right: 0,
-                child: Center(
-                  child: Transform.translate(
-                    // Offset the whole group so the plate itself remains centered.
-                    offset: Offset(plateActionExtent / 2, 0),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        _buildPlateWithSlots(
-                          context,
-                          gameState,
-                          gameNotifier,
-                          maxWidth - (plateActionExtent * 2),
-                          scale,
-                          digitFontSize,
-                          chipSize,
-                        ),
-                        const SizedBox(width: 8),
-                        SizedBox(
-                          width: 48,
-                          height: 48,
-                          child: IconButton.filledTonal(
-                            tooltip: l10n.translate('clear'),
-                            icon: const Icon(
-                              Icons.cleaning_services_rounded,
-                              size: 24,
-                            ),
-                            onPressed: () => gameNotifier.clearSlots(),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
                 ),
               ),
             ],
           ),
         );
       },
+    );
+  }
+
+  Widget _buildBrainWithPlate(
+    BuildContext context,
+    GameState state,
+    GameController controller,
+    AppLocalizations l10n,
+    double maxHeight,
+    double chipSize,
+  ) {
+    final brainHeight = maxHeight * 0.6;
+
+    return Positioned(
+      top: maxHeight * 0.2,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Image.network(
+            cerebroUrl,
+            height: brainHeight,
+            fit: BoxFit.contain,
+            alignment: Alignment.center,
+          ),
+          Positioned.fill(
+            child: LayoutBuilder(
+              builder: (context, brainConstraints) {
+                final brainWidth = brainConstraints.maxWidth;
+                final brainFrameHeight = brainConstraints.maxHeight;
+                // Every plate dimension uses the same unbounded scale as the brain frame.
+                final plateScale = brainFrameHeight / 240;
+                final digitFontSize = brainFrameHeight * 0.2;
+                final actionExtent = 56.0 * plateScale;
+
+                return Stack(
+                  children: [
+                    Positioned(
+                      top: brainFrameHeight * 0.27,
+                      left: 0,
+                      right: 0,
+                      child: Center(
+                        child: Transform.translate(
+                          // Keep the plate centered while Clear stays beside it.
+                          offset: Offset(actionExtent / 2, 0),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              _buildPlateWithSlots(
+                                context,
+                                state,
+                                controller,
+                                brainWidth - (actionExtent * 2),
+                                plateScale,
+                                digitFontSize,
+                                chipSize,
+                              ),
+                              SizedBox(width: 8 * plateScale),
+                              SizedBox(
+                                width: 48 * plateScale,
+                                height: 48 * plateScale,
+                                child: IconButton.filledTonal(
+                                  tooltip: l10n.translate('clear'),
+                                  icon: Icon(
+                                    Icons.cleaning_services_rounded,
+                                    size: 24 * plateScale,
+                                  ),
+                                  onPressed: () => controller.clearSlots(),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -650,15 +695,21 @@ class _MindViewState extends ConsumerState<MindView> {
     BuildContext context,
     GameState state,
     double maxWidth,
+    double heightScale,
   ) {
     final theme = Theme.of(context);
     final latex = state.evaluation.latex;
 
-    final formulaFontSize = (maxWidth * 0.05).clamp(16.0, 24.0).toDouble();
+    final formulaFontSize = ((maxWidth * 0.05).clamp(16.0, 24.0) * heightScale)
+        .clamp(14.0, 34.0)
+        .toDouble();
     return Container(
       constraints: BoxConstraints(maxWidth: maxWidth * 0.9),
       margin: EdgeInsets.symmetric(horizontal: maxWidth * 0.05),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: EdgeInsets.symmetric(
+        horizontal: 16 * heightScale,
+        vertical: 12 * heightScale,
+      ),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest.withValues(
           alpha: 0.85,
@@ -716,12 +767,18 @@ class _MindViewState extends ConsumerState<MindView> {
     BuildContext context,
     GameState state,
     double maxWidth,
-    double scale,
+    double heightScale,
     double chipSize,
   ) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: maxWidth * 0.025),
-      child: _buildOperatorsTray(context, state, maxWidth, scale, chipSize),
+      child: _buildOperatorsTray(
+        context,
+        state,
+        maxWidth,
+        heightScale,
+        chipSize,
+      ),
     );
   }
 
@@ -729,13 +786,13 @@ class _MindViewState extends ConsumerState<MindView> {
     BuildContext context,
     GameState state,
     double maxWidth,
-    double scale,
+    double heightScale,
     double chipSize,
   ) {
     final theme = Theme.of(context);
     final available = state.difficulty.availableOperators;
-    final chipSpacing = (scale * 6).clamp(4.0, 8.0).toDouble();
-    final trayMaxHeight = chipSize * 2 + chipSpacing + (24 * scale) + 2;
+    final chipSpacing = (heightScale * 6).clamp(4.0, 10.0).toDouble();
+    final trayMaxHeight = chipSize * 2 + chipSpacing + (24 * heightScale) + 2;
 
     return Container(
       constraints: BoxConstraints(
@@ -743,7 +800,7 @@ class _MindViewState extends ConsumerState<MindView> {
         maxHeight: trayMaxHeight,
       ),
       margin: EdgeInsets.zero,
-      padding: EdgeInsets.all(12 * scale),
+      padding: EdgeInsets.all(12 * heightScale),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHigh.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(18),
