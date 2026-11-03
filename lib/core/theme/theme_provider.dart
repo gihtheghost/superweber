@@ -42,7 +42,9 @@ class ThemeNotifier extends Notifier<ThemeState> {
       themeMode: _loadThemeMode(prefs),
       fontSizeScale: prefs?.getDouble('font_size_scale') ?? 1.0,
       fontFamily: prefs?.getString('font_family') ?? 'Roboto',
-      seedColor: Color(prefs?.getInt('seed_color') ?? Colors.deepPurple.toARGB32()),
+      seedColor: Color(
+        prefs?.getInt('seed_color') ?? Colors.deepPurple.toARGB32(),
+      ),
       locale: Locale(
         prefs?.getString('app_locale') ?? 'pt',
         prefs?.getString('app_country') ?? 'BR',
@@ -112,14 +114,12 @@ class ThemeNotifier extends Notifier<ThemeState> {
 
   TextTheme _scaleTextTheme(TextTheme base) {
     final scale = state.fontSizeScale;
-    return base.apply(
-      fontSizeFactor: scale,
-      fontFamily: state.fontFamily,
-    );
+    return base.apply(fontSizeFactor: scale, fontFamily: state.fontFamily);
   }
 }
 
 final sharedPreferencesProvider = Provider<SharedPreferences?>((ref) => null);
 
-final themeProvider =
-    NotifierProvider<ThemeNotifier, ThemeState>(ThemeNotifier.new);
+final themeProvider = NotifierProvider<ThemeNotifier, ThemeState>(
+  ThemeNotifier.new,
+);

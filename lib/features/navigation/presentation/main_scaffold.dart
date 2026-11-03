@@ -1,17 +1,14 @@
-import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
+import '../../../core/localization/app_localizations.dart';
 import 'help_dialog.dart';
 
 class MainScaffold extends StatelessWidget {
   final Widget child;
   final String location;
 
-  const MainScaffold({
-    super.key,
-    required this.child,
-    required this.location,
-  });
+  const MainScaffold({super.key, required this.child, required this.location});
 
   int _calculateSelectedIndex(BuildContext context) {
     if (location.startsWith('/settings')) return 2;
@@ -23,55 +20,85 @@ class MainScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final selectedIndex = _calculateSelectedIndex(context);
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       body: child,
-      bottomNavigationBar: CurvedNavigationBar(
-        index: selectedIndex,
-        height: 60,
-        backgroundColor: theme.scaffoldBackgroundColor,
-        color: theme.colorScheme.surfaceContainerHighest,
-        buttonBackgroundColor: theme.colorScheme.primary,
-        animationDuration: const Duration(milliseconds: 300),
-        items: [
-          Icon(
-            Icons.psychology,
-            size: 28,
-            color: selectedIndex == 0 ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface,
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Container(
+          height: 40,
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerHighest,
+            border: Border(
+              top: BorderSide(
+                color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+              ),
+            ),
           ),
-          Icon(
-            Icons.format_list_bulleted,
-            size: 28,
-            color: selectedIndex == 1 ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface,
+          child: Row(
+            children: [
+              _NavigationItem(
+                icon: Icons.psychology,
+                selected: selectedIndex == 0,
+                tooltip: l10n.translate('play'),
+                onTap: () => context.go('/game'),
+              ),
+              _NavigationItem(
+                icon: Icons.format_list_bulleted,
+                selected: selectedIndex == 1,
+                tooltip: l10n.translate('records_title'),
+                onTap: () => context.go('/records'),
+              ),
+              _NavigationItem(
+                icon: Icons.settings,
+                selected: selectedIndex == 2,
+                tooltip: l10n.translate('settings'),
+                onTap: () => context.go('/settings'),
+              ),
+              _NavigationItem(
+                icon: Icons.help_outline,
+                selected: false,
+                tooltip: l10n.translate('help'),
+                onTap: () => showHelpDialog(context),
+              ),
+            ],
           ),
-          Icon(
-            Icons.settings,
-            size: 28,
-            color: selectedIndex == 2 ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface,
+        ),
+      ),
+    );
+  }
+}
+
+class _NavigationItem extends StatelessWidget {
+  final IconData icon;
+  final bool selected;
+  final String tooltip;
+  final VoidCallback onTap;
+
+  const _NavigationItem({
+    required this.icon,
+    required this.selected,
+    required this.tooltip,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Expanded(
+      child: Tooltip(
+        message: tooltip,
+        child: InkWell(
+          onTap: onTap,
+          child: Center(
+            child: Icon(
+              icon,
+              size: 24,
+              color: selected ? colors.primary : colors.onSurfaceVariant,
+            ),
           ),
-          Icon(
-            Icons.help_outline,
-            size: 28,
-            color: theme.colorScheme.onSurface,
-          ),
-        ],
-        onTap: (index) {
-          switch (index) {
-            case 0:
-              context.go('/game');
-              break;
-            case 1:
-              context.go('/records');
-              break;
-            case 2:
-              context.go('/settings');
-              break;
-            case 3:
-              // Help button: opens showDialog as required by specification
-              showHelpDialog(context);
-              break;
-          }
-        },
+        ),
       ),
     );
   }
