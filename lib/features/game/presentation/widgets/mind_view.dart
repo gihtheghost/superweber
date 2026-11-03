@@ -442,6 +442,7 @@ class _MindViewState extends ConsumerState<MindView> {
       top: maxHeight * 0.2,
       child: Stack(
         alignment: Alignment.center,
+        clipBehavior: Clip.none,
         children: [
           Image.network(
             cerebroUrl,
@@ -452,7 +453,6 @@ class _MindViewState extends ConsumerState<MindView> {
           Positioned.fill(
             child: LayoutBuilder(
               builder: (context, brainConstraints) {
-                final brainWidth = brainConstraints.maxWidth;
                 final brainFrameHeight = brainConstraints.maxHeight;
                 // Every plate dimension uses the same unbounded scale as the brain frame.
                 final plateScale = brainFrameHeight / 240;
@@ -460,43 +460,40 @@ class _MindViewState extends ConsumerState<MindView> {
                 final actionExtent = 56.0 * plateScale;
 
                 return Stack(
+                  alignment: Alignment.center,
+                  clipBehavior: Clip.none,
                   children: [
                     Positioned(
                       top: brainFrameHeight * 0.27,
-                      left: 0,
-                      right: 0,
-                      child: Center(
-                        child: Transform.translate(
-                          // Keep the plate centered while Clear stays beside it.
-                          offset: Offset(actionExtent / 2, 0),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              _buildPlateWithSlots(
-                                context,
-                                state,
-                                controller,
-                                brainWidth - (actionExtent * 2),
-                                plateScale,
-                                digitFontSize,
-                                chipSize,
-                              ),
-                              SizedBox(width: 8 * plateScale),
-                              SizedBox(
-                                width: 48 * plateScale,
-                                height: 48 * plateScale,
-                                child: IconButton.filledTonal(
-                                  tooltip: l10n.translate('clear'),
-                                  icon: Icon(
-                                    Icons.cleaning_services_rounded,
-                                    size: 24 * plateScale,
-                                  ),
-                                  onPressed: () => controller.clearSlots(),
+                      child: Transform.translate(
+                        // Keep the plate centered while Clear stays beside it.
+                        offset: Offset(actionExtent / 2, 0),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            _buildPlateWithSlots(
+                              context,
+                              state,
+                              controller,
+                              plateScale,
+                              digitFontSize,
+                              chipSize,
+                            ),
+                            SizedBox(width: 8 * plateScale),
+                            SizedBox(
+                              width: 48 * plateScale,
+                              height: 48 * plateScale,
+                              child: IconButton.filledTonal(
+                                tooltip: l10n.translate('clear'),
+                                icon: Icon(
+                                  Icons.cleaning_services_rounded,
+                                  size: 24 * plateScale,
                                 ),
+                                onPressed: () => controller.clearSlots(),
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -514,7 +511,6 @@ class _MindViewState extends ConsumerState<MindView> {
     BuildContext context,
     GameState state,
     GameController controller,
-    double maxWidth,
     double scale,
     double digitFontSize,
     double chipSize,
@@ -580,7 +576,6 @@ class _MindViewState extends ConsumerState<MindView> {
 
         return Container(
           key: _plateKey,
-          constraints: BoxConstraints(maxWidth: maxWidth * 0.92),
           padding: EdgeInsets.fromLTRB(
             20 * scale,
             20 * scale,
@@ -597,13 +592,10 @@ class _MindViewState extends ConsumerState<MindView> {
                 ? Border.all(color: Colors.amberAccent, width: 2.5)
                 : null,
           ),
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: rowChildren,
-            ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: rowChildren,
           ),
         );
       },
