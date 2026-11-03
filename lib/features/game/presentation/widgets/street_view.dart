@@ -1,6 +1,8 @@
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../controllers/game_controller.dart';
 
 class _WeberHopTransform {
@@ -26,6 +28,8 @@ class _StreetViewState extends ConsumerState<StreetView>
     with TickerProviderStateMixin {
   late final AnimationController _animController;
   late final AnimationController _roadController;
+  late final AnimationController _carController;
+  late String _currentPlate;
 
   // Placeholder URLs as requested; user will host custom images later.
   static const String weberCatUrl =
@@ -40,10 +44,18 @@ class _StreetViewState extends ConsumerState<StreetView>
   @override
   void initState() {
     super.initState();
+    final initialGameState = ref.read(gameControllerProvider);
+    _currentPlate = initialGameState.plateString;
+
     _animController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 750),
     )..repeat();
+
+    _carController = AnimationController(
+      vsync: this,
+      duration: _carDuration(initialGameState.totalTime),
+    )..forward();
 
     _roadController = AnimationController(
       vsync: this,
@@ -54,9 +66,13 @@ class _StreetViewState extends ConsumerState<StreetView>
   @override
   void dispose() {
     _animController.dispose();
+    _carController.dispose();
     _roadController.dispose();
     super.dispose();
   }
+
+  Duration _carDuration(double seconds) =>
+      Duration(milliseconds: (seconds * 1000).round());
 
   _WeberHopTransform _calculateWeberHop(double t, double maxJump) {
     // 1. dy (vertical jump arc up and down)
@@ -91,33 +107,40 @@ class _StreetViewState extends ConsumerState<StreetView>
     final scaleY = 1.0 + s;
     final scaleX = 1.0 - (s * 0.80);
 
-    return _WeberHopTransform(
-      dy: dy,
-      scaleX: scaleX,
-      scaleY: scaleY,
-    );
+    return _WeberHopTransform(dy: dy, scaleX: scaleX, scaleY: scaleY);
   }
 
   @override
   Widget build(BuildContext context) {
     final gameState = ref.watch(gameControllerProvider);
-    final theme = Theme.of(context);
+
+    ref.listen(gameControllerProvider, (previous, next) {
+      final isNewCar =
+          next.plateString != _currentPlate ||
+          (next.timeRemaining == next.totalTime &&
+              previous?.timeRemaining != next.timeRemaining) ||
+          (previous?.isGameOver == true && !next.isGameOver);
+      if (isNewCar) {
+        _currentPlate = next.plateString;
+        _carController.duration = _carDuration(next.totalTime);
+        _carController.forward(from: 0);
+      } else if (next.isExploding && !(previous?.isExploding ?? false)) {
+        _carController.stop();
+      }
+    });
 
     return RepaintBoundary(
       child: LayoutBuilder(
         builder: (context, constraints) {
           final streetWidth = constraints.maxWidth;
           final streetHeight = constraints.maxHeight;
-          final carStartX = (streetWidth - 90.0).clamp(100.0, 2000.0);
 
-          // Car position: travels from streetWidth - 90 down to Weber at ~60
-          final progress = gameState.carProgress;
           final weberMargin = streetHeight * 0.05;
           final weberSize = streetHeight * 0.75;
           final carMargin = streetHeight * 0.08;
           final carSize = streetHeight * 0.7;
           final carEndX = 14.0 + weberSize + 8.0;
-          final carCurrentX = carStartX - (progress * (carStartX - carEndX));
+          final carStartX = streetWidth - carSize;
 
           return ClipRect(
             child: Stack(
@@ -132,13 +155,18 @@ class _StreetViewState extends ConsumerState<StreetView>
                       const double imgOriginalWidth = 1920;
                       const double imgOriginalHeight = 216;
 
-                      final tileWidth = streetHeight * (imgOriginalWidth / imgOriginalHeight);
+                      final tileWidth =
+                          streetHeight * (imgOriginalWidth / imgOriginalHeight);
                       final shift = -(offset * tileWidth);
 
                       return ClipRect(
                         child: Stack(
                           children: [
-                            for (double x = shift; x < streetWidth + tileWidth; x += tileWidth)
+                            for (
+                              double x = shift;
+                              x < streetWidth + tileWidth;
+                              x += tileWidth
+                            )
                               Positioned(
                                 left: x,
                                 top: 0,
@@ -181,18 +209,17 @@ class _StreetViewState extends ConsumerState<StreetView>
                   child: Image.network(
                     weberCatUrl,
                     fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) => const Icon(
-                      Icons.pets,
-                      color: Colors.white,
-                      size: 42,
-                    ),
+                    errorBuilder: (context, error, stackTrace) =>
+                        const Icon(Icons.pets, color: Colors.white, size: 42),
                   ),
                 ),
 
                 // 3. Incoming Car or Explosion Effect
                 if (gameState.isExploding)
                   Positioned(
-                    left: carCurrentX,
+                    left:
+                        carStartX +
+                        ((carEndX - carStartX) * _carController.value),
                     bottom: carMargin - (carSize * 0.8),
                     child: Image.network(
                       explosionSpriteUrl,
@@ -207,44 +234,62 @@ class _StreetViewState extends ConsumerState<StreetView>
                     ),
                   )
                 else
-                  Positioned(
-                    left: carCurrentX.clamp(carEndX, carStartX),
-                    bottom: carMargin,
-                    child: AnimatedBuilder(
-                      animation: _animController,
-                      builder: (context, child) {
-                        final t = _animController.value;
-                        final slant = 0.1 * math.sin(t * 2 * math.pi);
-                        final squish = 0.2 * math.sin(t * 4 * math.pi);
+                  AnimatedBuilder(
+                    animation: _carController,
+                    builder: (context, _) {
+                      final carCurrentX =
+                          carStartX +
+                          ((carEndX - carStartX) * _carController.value);
+                      return Positioned(
+                        left: carCurrentX,
+                        bottom: carMargin,
+                        child: AnimatedBuilder(
+                          animation: _animController,
+                          builder: (context, child) {
+                            final t = _animController.value;
+                            final slant = 0.1 * math.sin(t * 2 * math.pi);
+                            final squish = 0.2 * math.sin(t * 4 * math.pi);
 
-                        final transform = Matrix4.identity()
-                          ..multiply(Matrix4.skewX(slant))
-                          ..multiply(Matrix4.diagonal3Values(1.0 + squish, 1.0 - squish, 1.0));
+                            final transform = Matrix4.identity()
+                              ..multiply(Matrix4.skewX(slant))
+                              ..multiply(
+                                Matrix4.diagonal3Values(
+                                  1.0 + squish,
+                                  1.0 - squish,
+                                  1.0,
+                                ),
+                              );
 
-                        return Transform(
-                          alignment: Alignment.bottomCenter,
-                          transform: transform,
-                          child: child,
-                        );
-                      },
-                      child: Image.network(
-                        carSpriteUrl,
-                        fit: BoxFit.contain,
-                        height: carSize,
-                        errorBuilder: (context, error, stackTrace) => const Icon(
-                          Icons.directions_car,
-                          color: Colors.white,
-                          size: 32,
+                            return Transform(
+                              alignment: Alignment.bottomCenter,
+                              transform: transform,
+                              child: child,
+                            );
+                          },
+                          child: Image.network(
+                            carSpriteUrl,
+                            fit: BoxFit.contain,
+                            height: carSize,
+                            errorBuilder: (context, error, stackTrace) =>
+                                const Icon(
+                                  Icons.directions_car,
+                                  color: Colors.white,
+                                  size: 32,
+                                ),
+                          ),
                         ),
-                      ),
-                    ),
+                      );
+                    },
                   ),
                 // 4. Top Overlay HUD (Score badge on top-right)
                 Positioned(
                   top: 8,
                   right: 12,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.black54,
                       borderRadius: BorderRadius.circular(12),
@@ -253,7 +298,11 @@ class _StreetViewState extends ConsumerState<StreetView>
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.flash_on, color: Colors.amberAccent, size: 16),
+                        const Icon(
+                          Icons.flash_on,
+                          color: Colors.amberAccent,
+                          size: 16,
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           '${gameState.score}',
@@ -271,7 +320,7 @@ class _StreetViewState extends ConsumerState<StreetView>
             ),
           );
         },
-      )
+      ),
     );
   }
 }
