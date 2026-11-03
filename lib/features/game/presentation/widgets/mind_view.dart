@@ -265,6 +265,7 @@ class _MindViewState extends ConsumerState<MindView> {
                 gameNotifier,
                 l10n,
                 maxHeight,
+                maxWidth,
                 chipSize,
               ),
 
@@ -434,75 +435,82 @@ class _MindViewState extends ConsumerState<MindView> {
     GameController controller,
     AppLocalizations l10n,
     double maxHeight,
+    double viewportWidth,
     double chipSize,
   ) {
     final brainHeight = maxHeight * 0.6;
 
     return Positioned(
       top: maxHeight * 0.2,
-      child: Stack(
-        alignment: Alignment.center,
-        clipBehavior: Clip.none,
-        children: [
-          Image.network(
-            cerebroUrl,
-            height: brainHeight,
-            fit: BoxFit.contain,
-            alignment: Alignment.center,
-          ),
-          Positioned.fill(
-            child: LayoutBuilder(
-              builder: (context, brainConstraints) {
-                final brainFrameHeight = brainConstraints.maxHeight;
-                // Every plate dimension uses the same unbounded scale as the brain frame.
-                final plateScale = brainFrameHeight / 240;
-                final digitFontSize = brainFrameHeight * 0.2;
-                final actionExtent = 56.0 * plateScale;
+      left: 0,
+      right: 0,
+      child: SizedBox(
+        width: viewportWidth,
+        height: brainHeight,
+        child: Stack(
+          alignment: Alignment.center,
+          clipBehavior: Clip.none,
+          children: [
+            Image.network(
+              cerebroUrl,
+              height: brainHeight,
+              fit: BoxFit.contain,
+              alignment: Alignment.center,
+            ),
+            Positioned.fill(
+              child: LayoutBuilder(
+                builder: (context, brainConstraints) {
+                  final brainFrameHeight = brainConstraints.maxHeight;
+                  // Every plate dimension uses the same unbounded scale as the brain frame.
+                  final plateScale = brainFrameHeight / 240;
+                  final digitFontSize = brainFrameHeight * 0.2;
+                  final actionExtent = 56.0 * plateScale;
 
-                return Stack(
-                  alignment: Alignment.center,
-                  clipBehavior: Clip.none,
-                  children: [
-                    Positioned(
-                      top: brainFrameHeight * 0.27,
-                      child: Transform.translate(
-                        // Keep the plate centered while Clear stays beside it.
-                        offset: Offset(actionExtent / 2, 0),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            _buildPlateWithSlots(
-                              context,
-                              state,
-                              controller,
-                              plateScale,
-                              digitFontSize,
-                              chipSize,
-                            ),
-                            SizedBox(width: 8 * plateScale),
-                            SizedBox(
-                              width: 48 * plateScale,
-                              height: 48 * plateScale,
-                              child: IconButton.filledTonal(
-                                tooltip: l10n.translate('clear'),
-                                icon: Icon(
-                                  Icons.cleaning_services_rounded,
-                                  size: 24 * plateScale,
-                                ),
-                                onPressed: () => controller.clearSlots(),
+                  return Stack(
+                    alignment: Alignment.center,
+                    clipBehavior: Clip.none,
+                    children: [
+                      Positioned(
+                        top: brainFrameHeight * 0.27,
+                        child: Transform.translate(
+                          // Keep the plate centered while Clear stays beside it.
+                          offset: Offset(actionExtent / 2, 0),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              _buildPlateWithSlots(
+                                context,
+                                state,
+                                controller,
+                                plateScale,
+                                digitFontSize,
+                                chipSize,
                               ),
-                            ),
-                          ],
+                              SizedBox(width: 8 * plateScale),
+                              SizedBox(
+                                width: 48 * plateScale,
+                                height: 48 * plateScale,
+                                child: IconButton.filledTonal(
+                                  tooltip: l10n.translate('clear'),
+                                  icon: Icon(
+                                    Icons.cleaning_services_rounded,
+                                    size: 24 * plateScale,
+                                  ),
+                                  onPressed: () => controller.clearSlots(),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                );
-              },
+                    ],
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
