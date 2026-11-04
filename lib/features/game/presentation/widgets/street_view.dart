@@ -31,15 +31,10 @@ class _StreetViewState extends ConsumerState<StreetView>
   late final AnimationController _carController;
   late String _currentPlate;
 
-  // Placeholder URLs as requested; user will host custom images later.
-  static const String weberCatUrl =
-      'https://raw.githubusercontent.com/tiribsil/superweber/main/assets/weber_idle.png';
-  static const String carSpriteUrl =
-      'https://raw.githubusercontent.com/tiribsil/superweber/main/assets/car_red.png';
-  static const String explosionSpriteUrl =
-      'https://raw.githubusercontent.com/tiribsil/superweber/main/assets/explosion.gif';
-  static const String roadTileUrl =
-      'https://raw.githubusercontent.com/tiribsil/superweber/main/assets/rua.png';
+  static const String weberCatAsset = 'assets/weber_idle.png';
+  static const String carSpriteAsset = 'assets/car_red.png';
+  static const String explosionSpriteAsset = 'assets/explosion.gif';
+  static const String roadTileAsset = 'assets/rua.png';
 
   @override
   void initState() {
@@ -172,8 +167,8 @@ class _StreetViewState extends ConsumerState<StreetView>
                                 top: 0,
                                 bottom: 0,
                                 width: tileWidth,
-                                child: Image.network(
-                                  roadTileUrl,
+                                child: Image.asset(
+                                  roadTileAsset,
                                   fit: BoxFit.fitHeight,
                                 ),
                               ),
@@ -206,12 +201,7 @@ class _StreetViewState extends ConsumerState<StreetView>
                       ),
                     );
                   },
-                  child: Image.network(
-                    weberCatUrl,
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) =>
-                        const Icon(Icons.pets, color: Colors.white, size: 42),
-                  ),
+                  child: Image.asset(weberCatAsset, fit: BoxFit.contain),
                 ),
 
                 // 3. Incoming Car or Explosion Effect
@@ -221,16 +211,11 @@ class _StreetViewState extends ConsumerState<StreetView>
                         carStartX +
                         ((carEndX - carStartX) * _carController.value),
                     bottom: carMargin - (carSize * 0.8),
-                    child: Image.network(
-                      explosionSpriteUrl,
+                    child: Image.asset(
+                      explosionSpriteAsset,
                       key: ValueKey(gameState.score),
                       height: carSize * 2.5,
                       fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) => const Icon(
-                        Icons.local_fire_department,
-                        color: Colors.orangeAccent,
-                        size: 50,
-                      ),
                     ),
                   )
                 else
@@ -266,16 +251,10 @@ class _StreetViewState extends ConsumerState<StreetView>
                               child: child,
                             );
                           },
-                          child: Image.network(
-                            carSpriteUrl,
+                          child: Image.asset(
+                            carSpriteAsset,
                             fit: BoxFit.contain,
                             height: carSize,
-                            errorBuilder: (context, error, stackTrace) =>
-                                const Icon(
-                                  Icons.directions_car,
-                                  color: Colors.white,
-                                  size: 32,
-                                ),
                           ),
                         ),
                       );

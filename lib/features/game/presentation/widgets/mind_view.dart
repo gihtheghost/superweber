@@ -179,12 +179,9 @@ class MindView extends ConsumerStatefulWidget {
 }
 
 class _MindViewState extends ConsumerState<MindView> {
-  static const String weberSombraUrl =
-      'https://raw.githubusercontent.com/tiribsil/superweber/main/assets/weber_sombra.png';
-  static const String cerebroUrl =
-      'https://raw.githubusercontent.com/tiribsil/superweber/main/assets/cerebro.png';
-  static const String placaUrl =
-      'https://raw.githubusercontent.com/tiribsil/superweber/main/assets/placa.png';
+  static const String weberSombraAsset = 'assets/weber_sombra.png';
+  static const String cerebroAsset = 'assets/cerebro.png';
+  static const String placaAsset = 'assets/placa.png';
 
   final GlobalKey _plateKey = GlobalKey();
   final List<GlobalKey> _digitKeys = List.generate(4, (_) => GlobalKey());
@@ -200,7 +197,7 @@ class _MindViewState extends ConsumerState<MindView> {
     super.didChangeDependencies();
     _plateImageStream?.removeListener(_plateImageListener!);
 
-    final imageStream = NetworkImage(placaUrl)
+    final imageStream = AssetImage(placaAsset)
         .resolve(createLocalImageConfiguration(context));
     _plateImageListener = ImageStreamListener(
       (imageInfo, synchronousCall) {
@@ -411,8 +408,8 @@ class _MindViewState extends ConsumerState<MindView> {
             children: [
               // 1. Sombra do Weber (Fundo: preenche a altura sem esticar horizontalmente)
               Positioned.fill(
-                child: Image.network(
-                  weberSombraUrl,
+                child: Image.asset(
+                  weberSombraAsset,
                   fit: BoxFit.fitHeight,
                   alignment: Alignment.center,
                 ),
@@ -649,8 +646,8 @@ class _MindViewState extends ConsumerState<MindView> {
           alignment: Alignment.center,
           clipBehavior: Clip.none,
           children: [
-            Image.network(
-              cerebroUrl,
+            Image.asset(
+              cerebroAsset,
               height: brainHeight,
               fit: BoxFit.contain,
               alignment: Alignment.center,
