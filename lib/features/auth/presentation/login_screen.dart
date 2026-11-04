@@ -3,6 +3,7 @@ import 'package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/theme/theme_provider.dart';
 import '../../game/domain/models/difficulty_level.dart';
@@ -18,7 +19,7 @@ class LoginScreen extends ConsumerWidget {
     final themeNotifier = ref.read(themeProvider.notifier);
     final gameState = ref.watch(gameControllerProvider);
     final gameNotifier = ref.read(gameControllerProvider.notifier);
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     final providers = <fb_auth.AuthProvider>[
       fb_auth.EmailAuthProvider(),
@@ -34,7 +35,9 @@ class LoginScreen extends ConsumerWidget {
               constraints: const BoxConstraints(maxWidth: 480),
               child: Card(
                 elevation: 4,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(28.0),
                   child: Column(
@@ -45,20 +48,25 @@ class LoginScreen extends ConsumerWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            l10n.translate('select_language'),
-                            style: theme.textTheme.labelMedium?.copyWith(fontWeight: FontWeight.bold),
+                            l10n.selectLanguage,
+                            style: theme.textTheme.labelMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                           DropdownButton<String>(
                             value: themeState.locale.languageCode,
                             underline: const SizedBox(),
-                            items: const [
+                            items: [
                               DropdownMenuItem(
                                 value: 'pt',
                                 child: Row(
                                   children: [
-                                    Text('🇧🇷', style: TextStyle(fontSize: 20)),
+                                    Text(
+                                      '🇧🇷',
+                                      style: TextStyle(fontSize: 20),
+                                    ),
                                     SizedBox(width: 8),
-                                    Text('Português'),
+                                    Text(l10n.portuguese),
                                   ],
                                 ),
                               ),
@@ -66,18 +74,25 @@ class LoginScreen extends ConsumerWidget {
                                 value: 'en',
                                 child: Row(
                                   children: [
-                                    Text('🇺🇸', style: TextStyle(fontSize: 20)),
+                                    Text(
+                                      '🇺🇸',
+                                      style: TextStyle(fontSize: 20),
+                                    ),
                                     SizedBox(width: 8),
-                                    Text('English'),
+                                    Text(l10n.english),
                                   ],
                                 ),
                               ),
                             ],
                             onChanged: (langCode) {
                               if (langCode == 'en') {
-                                themeNotifier.setLocale(const Locale('en', 'US'));
+                                themeNotifier.setLocale(
+                                  const Locale('en', 'US'),
+                                );
                               } else {
-                                themeNotifier.setLocale(const Locale('pt', 'BR'));
+                                themeNotifier.setLocale(
+                                  const Locale('pt', 'BR'),
+                                );
                               }
                             },
                           ),
@@ -89,10 +104,14 @@ class LoginScreen extends ConsumerWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.psychology, size: 36, color: theme.colorScheme.primary),
+                          Icon(
+                            Icons.psychology,
+                            size: 36,
+                            color: theme.colorScheme.primary,
+                          ),
                           const SizedBox(width: 10),
                           Text(
-                            l10n.translate('app_title'),
+                            l10n.appTitle,
                             style: theme.textTheme.headlineMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                               color: theme.colorScheme.primary,
@@ -104,14 +123,23 @@ class LoginScreen extends ConsumerWidget {
 
                       // Mandatory Team Members Notice
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 8,
+                        ),
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.primaryContainer.withValues(alpha: 0.4),
+                          color: theme.colorScheme.primaryContainer.withValues(
+                            alpha: 0.4,
+                          ),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.2)),
+                          border: Border.all(
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.2,
+                            ),
+                          ),
                         ),
                         child: Text(
-                          l10n.translate('team_members'),
+                          l10n.authors,
                           textAlign: TextAlign.center,
                           style: theme.textTheme.bodySmall?.copyWith(
                             fontWeight: FontWeight.bold,
@@ -124,10 +152,16 @@ class LoginScreen extends ConsumerWidget {
                       // Firebase UI Auth Form
                       fb_auth.FirebaseUIActions(
                         actions: [
-                          fb_auth.AuthStateChangeAction<fb_auth.SignedIn>((context, state) {
+                          fb_auth.AuthStateChangeAction<fb_auth.SignedIn>((
+                            context,
+                            state,
+                          ) {
                             context.go('/game');
                           }),
-                          fb_auth.AuthStateChangeAction<fb_auth.UserCreated>((context, state) {
+                          fb_auth.AuthStateChangeAction<fb_auth.UserCreated>((
+                            context,
+                            state,
+                          ) {
                             context.go('/game');
                           }),
                         ],
@@ -141,18 +175,26 @@ class LoginScreen extends ConsumerWidget {
                       const SizedBox(height: 16),
                       // Difficulty selection before starting run
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                          color: theme.colorScheme.surfaceContainerHighest
+                              .withValues(alpha: 0.5),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: theme.colorScheme.outlineVariant),
+                          border: Border.all(
+                            color: theme.colorScheme.outlineVariant,
+                          ),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              l10n.translate('difficulty'),
-                              style: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold),
+                              l10n.difficulty,
+                              style: theme.textTheme.labelLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             DropdownButton<DifficultyLevel>(
                               value: gameState.difficulty,
@@ -162,8 +204,16 @@ class LoginScreen extends ConsumerWidget {
                                 return DropdownMenuItem(
                                   value: d,
                                   child: Text(
-                                    d.displayName,
-                                    style: const TextStyle(fontWeight: FontWeight.bold),
+                                    switch (d) {
+                                      DifficultyLevel.easy => l10n.easy,
+                                      DifficultyLevel.intermediate =>
+                                        l10n.intermediate,
+                                      DifficultyLevel.advanced => l10n.advanced,
+                                      DifficultyLevel.hard => l10n.hard,
+                                    },
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 );
                               }).toList(),
@@ -181,10 +231,12 @@ class LoginScreen extends ConsumerWidget {
                       OutlinedButton.icon(
                         style: OutlinedButton.styleFrom(
                           minimumSize: const Size.fromHeight(48),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
                         icon: const Icon(Icons.arrow_forward),
-                        label: Text(l10n.translate('play')),
+                        label: Text(l10n.play),
                         onPressed: () {
                           context.go('/game');
                         },

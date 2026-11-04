@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../core/localization/app_localizations.dart';
 import '../domain/models/difficulty_level.dart';
 import 'controllers/game_controller.dart';
@@ -13,7 +14,7 @@ class GameScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final gameState = ref.watch(gameControllerProvider);
     final gameNotifier = ref.read(gameControllerProvider.notifier);
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
 
     return Scaffold(
@@ -23,16 +24,10 @@ class GameScreen extends ConsumerWidget {
             Column(
               children: const [
                 // Top 20% of vertical space: Street parallax view with Weber & incoming car
-                Expanded(
-                  flex: 2,
-                  child: StreetView(),
-                ),
+                Expanded(flex: 2, child: StreetView()),
 
                 // Bottom 80% of vertical space: Mind of Weber with brain silhouette & plate slots
-                Expanded(
-                  flex: 8,
-                  child: MindView(),
-                ),
+                Expanded(flex: 8, child: MindView()),
               ],
             ),
 
@@ -45,17 +40,23 @@ class GameScreen extends ConsumerWidget {
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 420),
                   child: Card(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
                     elevation: 8,
                     child: Padding(
                       padding: const EdgeInsets.all(28.0),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.sentiment_very_dissatisfied, size: 64, color: Colors.redAccent),
+                          const Icon(
+                            Icons.sentiment_very_dissatisfied,
+                            size: 64,
+                            color: Colors.redAccent,
+                          ),
                           const SizedBox(height: 16),
                           Text(
-                            l10n.translate('game_over'),
+                            l10n.gameOver,
                             style: theme.textTheme.headlineMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                               color: Colors.redAccent,
@@ -63,13 +64,16 @@ class GameScreen extends ConsumerWidget {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            l10n.translate('game_over_desc'),
+                            l10n.gameOverDescription,
                             textAlign: TextAlign.center,
                             style: theme.textTheme.bodyMedium,
                           ),
                           const SizedBox(height: 20),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 10,
+                            ),
                             decoration: BoxDecoration(
                               color: theme.colorScheme.primaryContainer,
                               borderRadius: BorderRadius.circular(12),
@@ -77,10 +81,14 @@ class GameScreen extends ConsumerWidget {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Icon(Icons.flash_on, color: Colors.amber, size: 24),
+                                const Icon(
+                                  Icons.flash_on,
+                                  color: Colors.amber,
+                                  size: 24,
+                                ),
                                 const SizedBox(width: 8),
                                 Text(
-                                  '${l10n.translate('score')}: ${gameState.score}',
+                                  '${l10n.score}: ${gameState.score}',
                                   style: theme.textTheme.titleMedium?.copyWith(
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -90,18 +98,26 @@ class GameScreen extends ConsumerWidget {
                           ),
                           const SizedBox(height: 16),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
-                              color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                              color: theme.colorScheme.surfaceContainerHighest
+                                  .withValues(alpha: 0.5),
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: theme.colorScheme.outlineVariant),
+                              border: Border.all(
+                                color: theme.colorScheme.outlineVariant,
+                              ),
                             ),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                  l10n.translate('difficulty'),
-                                  style: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold),
+                                  l10n.difficulty,
+                                  style: theme.textTheme.labelLarge?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                                 DropdownButton<DifficultyLevel>(
                                   value: gameState.difficulty,
@@ -111,8 +127,17 @@ class GameScreen extends ConsumerWidget {
                                     return DropdownMenuItem(
                                       value: d,
                                       child: Text(
-                                        d.displayName,
-                                        style: const TextStyle(fontWeight: FontWeight.bold),
+                                        switch (d) {
+                                          DifficultyLevel.easy => l10n.easy,
+                                          DifficultyLevel.intermediate =>
+                                            l10n.intermediate,
+                                          DifficultyLevel.advanced =>
+                                            l10n.advanced,
+                                          DifficultyLevel.hard => l10n.hard,
+                                        },
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
                                     );
                                   }).toList(),
@@ -129,10 +154,12 @@ class GameScreen extends ConsumerWidget {
                           FilledButton.icon(
                             style: FilledButton.styleFrom(
                               minimumSize: const Size.fromHeight(48),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                             ),
                             icon: const Icon(Icons.replay),
-                            label: Text(l10n.translate('restart')),
+                            label: Text(l10n.restart),
                             onPressed: () => gameNotifier.restartRun(),
                           ),
                         ],

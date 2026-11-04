@@ -9,6 +9,25 @@ import '../../domain/models/game_state.dart';
 import '../../domain/models/operator_token.dart';
 import '../controllers/game_controller.dart';
 
+String _localizedGameError(AppLocalizations l10n, String code) =>
+    switch (code) {
+      'invalid_structure' => l10n.errorInvalidStructure,
+      'need_operator' => l10n.errorNeedOperator,
+      'need_equals' => l10n.errorNeedEquals,
+      'multiple_equals' => l10n.errorMultipleEquals,
+      'both_sides_required' => l10n.errorBothSidesRequired,
+      'unequal_sides' => l10n.errorUnequalSides,
+      'unexpected_tokens' => l10n.errorUnexpectedTokens,
+      'syntax' => l10n.errorSyntax,
+      'div_zero' => l10n.errorDivisionByZero,
+      'non_integer_div' => l10n.errorNonIntegerDivision,
+      'overflow' => l10n.errorOverflow,
+      'square_root_domain' => l10n.errorSquareRootDomain,
+      'factorial_domain' => l10n.errorFactorialDomain,
+      'action_rejected' => l10n.errorRejectedAction,
+      _ => l10n.errorInvalidExpression,
+    };
+
 abstract class _PlateItem {
   final GlobalKey key;
   _PlateItem({required this.key});
@@ -367,7 +386,7 @@ class _MindViewState extends ConsumerState<MindView> {
     final gameState = ref.watch(gameControllerProvider);
     final gameNotifier = ref.read(gameControllerProvider.notifier);
     final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -509,12 +528,12 @@ class _MindViewState extends ConsumerState<MindView> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 IconButton.filledTonal(
-                                  tooltip: l10n.translate('skip'),
+                                  tooltip: l10n.skip,
                                   icon: const Icon(Icons.skip_next),
                                   onPressed: () => gameNotifier.skipPlate(),
                                 ),
                                 IconButton.filledTonal(
-                                  tooltip: l10n.translate('surrender'),
+                                  tooltip: l10n.surrender,
                                   style: IconButton.styleFrom(
                                     foregroundColor: theme.colorScheme.error,
                                   ),
@@ -529,7 +548,7 @@ class _MindViewState extends ConsumerState<MindView> {
                               children: [
                                 FilledButton.tonalIcon(
                                   icon: const Icon(Icons.skip_next, size: 18),
-                                  label: Text(l10n.translate('skip')),
+                                  label: Text(l10n.skip),
                                   onPressed: () => gameNotifier.skipPlate(),
                                 ),
                                 const SizedBox(width: 8),
@@ -541,7 +560,7 @@ class _MindViewState extends ConsumerState<MindView> {
                                     Icons.flag_outlined,
                                     size: 18,
                                   ),
-                                  label: Text(l10n.translate('surrender')),
+                                  label: Text(l10n.surrender),
                                   onPressed: () => gameNotifier.surrender(),
                                 ),
                               ],
@@ -567,7 +586,7 @@ class _MindViewState extends ConsumerState<MindView> {
                           border: Border.all(color: Colors.redAccent),
                         ),
                         child: Text(
-                          gameState.lastError!,
+                          _localizedGameError(l10n, gameState.lastError!),
                           style: const TextStyle(
                             color: Colors.redAccent,
                             fontSize: 12,
@@ -671,7 +690,7 @@ class _MindViewState extends ConsumerState<MindView> {
                                 width: 48 * plateScale,
                                 height: 48 * plateScale,
                                 child: IconButton.filledTonal(
-                                  tooltip: l10n.translate('clear'),
+                                  tooltip: l10n.clear,
                                   icon: Icon(
                                     Icons.cleaning_services_rounded,
                                     size: 24 * plateScale,

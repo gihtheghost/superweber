@@ -46,6 +46,7 @@ dependencies:
   firebase_auth: ^6.7.0
   cloud_firestore: ^6.10.0
   firebase_ui_auth: ^3.1.1
+  firebase_ui_localizations: ^2.1.0
   firebase_ui_oauth_google: ^2.1.1
   intl: ^0.20.3
 
@@ -59,6 +60,7 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+  network_image_mock: ^2.1.1
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -70,6 +72,7 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+  generate: true
 
   # To add assets to your application, add an assets section, like this:
   # assets:

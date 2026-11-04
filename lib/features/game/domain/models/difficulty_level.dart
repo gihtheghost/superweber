@@ -6,19 +6,6 @@ enum DifficultyLevel {
   advanced,
   hard;
 
-  String get displayName {
-    switch (this) {
-      case DifficultyLevel.easy:
-        return 'Fácil';
-      case DifficultyLevel.intermediate:
-        return 'Intermediário';
-      case DifficultyLevel.advanced:
-        return 'Avançado';
-      case DifficultyLevel.hard:
-        return 'Difícil';
-    }
-  }
-
   bool get allowFractionalDivision => this == DifficultyLevel.easy;
 
   List<OperatorToken> get availableOperators {

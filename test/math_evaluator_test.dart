@@ -52,7 +52,11 @@ void main() {
       final slots = [
         [OperatorToken.parenOpen],
         [OperatorToken.minus],
-        [OperatorToken.parenClose, OperatorToken.factorial, OperatorToken.equals],
+        [
+          OperatorToken.parenClose,
+          OperatorToken.factorial,
+          OperatorToken.equals,
+        ],
         [OperatorToken.multiply],
         <OperatorToken>[],
       ];
@@ -88,7 +92,7 @@ void main() {
       );
 
       expect(result.isValid, isFalse);
-      expect(result.errorMessage, contains('limite'));
+      expect(result.errorMessage, equals('overflow'));
     });
 
     test('Division by zero fails validation', () {
@@ -108,28 +112,31 @@ void main() {
       );
 
       expect(result.isValid, isFalse);
-      expect(result.errorMessage, contains('Divisão por zero'));
+      expect(result.errorMessage, equals('div_zero'));
     });
 
-    test('Non-integer division rejected when allowFractionalDivision is false', () {
-      final slots = [
-        <OperatorToken>[],
-        [OperatorToken.divide],
-        [OperatorToken.equals],
-        [OperatorToken.plus],
-        <OperatorToken>[],
-      ];
-      final digits = [5, 2, 2, 0]; // 5 / 2 = 2 + 0 => 2.5 vs 2
+    test(
+      'Non-integer division rejected when allowFractionalDivision is false',
+      () {
+        final slots = [
+          <OperatorToken>[],
+          [OperatorToken.divide],
+          [OperatorToken.equals],
+          [OperatorToken.plus],
+          <OperatorToken>[],
+        ];
+        final digits = [5, 2, 2, 0]; // 5 / 2 = 2 + 0 => 2.5 vs 2
 
-      final result = MathEvaluator.evaluate(
-        slots: slots,
-        digits: digits,
-        allowFractionalDivision: false,
-      );
+        final result = MathEvaluator.evaluate(
+          slots: slots,
+          digits: digits,
+          allowFractionalDivision: false,
+        );
 
-      expect(result.isValid, isFalse);
-      expect(result.errorMessage, contains('não inteira'));
-    });
+        expect(result.isValid, isFalse);
+        expect(result.errorMessage, equals('non_integer_div'));
+      },
+    );
 
     test('Non-integer division allowed when allowFractionalDivision is true (Fácil)', () {
       final slots = [
@@ -140,7 +147,12 @@ void main() {
         <OperatorToken>[],
       ];
       // 5 / 2 = 2.5 (if we could make 2.5 on right)
-      final digits = [5, 2, 3, 1]; // 5 / 2 = 2.5, 3 - 1 = 2 (not equal, but valid math)
+      final digits = [
+        5,
+        2,
+        3,
+        1,
+      ]; // 5 / 2 = 2.5, 3 - 1 = 2 (not equal, but valid math)
 
       final result = MathEvaluator.evaluate(
         slots: slots,
@@ -169,11 +181,14 @@ void main() {
 
       // Insert parenClose to the right of plus (insertIndex 2)
       slots[1].insert(2, OperatorToken.parenClose);
-      expect(slots[1], equals([
-        OperatorToken.sqrt,
-        OperatorToken.plus,
-        OperatorToken.parenClose,
-      ]));
+      expect(
+        slots[1],
+        equals([
+          OperatorToken.sqrt,
+          OperatorToken.plus,
+          OperatorToken.parenClose,
+        ]),
+      );
     });
 
     test('generateLatex auto-closes unclosed sqrt without parser error', () {

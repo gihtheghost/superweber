@@ -34,13 +34,10 @@ class SettingsScreen extends ConsumerWidget {
     final themeNotifier = ref.read(themeProvider.notifier);
     final soundEnabled = ref.watch(soundControllerProvider);
     final soundNotifier = ref.read(soundControllerProvider.notifier);
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.translate('settings')),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: Text(l10n.settings), centerTitle: true),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 600),
@@ -58,7 +55,7 @@ class SettingsScreen extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        l10n.translate('theme_mode'),
+                        l10n.themeMode,
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -68,17 +65,17 @@ class SettingsScreen extends ConsumerWidget {
                         segments: [
                           ButtonSegment(
                             value: ThemeMode.system,
-                            label: Text(l10n.translate('theme_system')),
+                            label: Text(l10n.themeSystem),
                             icon: const Icon(Icons.brightness_auto),
                           ),
                           ButtonSegment(
                             value: ThemeMode.light,
-                            label: Text(l10n.translate('theme_light')),
+                            label: Text(l10n.themeLight),
                             icon: const Icon(Icons.light_mode),
                           ),
                           ButtonSegment(
                             value: ThemeMode.dark,
-                            label: Text(l10n.translate('theme_dark')),
+                            label: Text(l10n.themeDark),
                             icon: const Icon(Icons.dark_mode),
                           ),
                         ],
@@ -108,7 +105,7 @@ class SettingsScreen extends ConsumerWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            l10n.translate('font_size'),
+                            l10n.fontSize,
                             style: theme.textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
@@ -144,7 +141,7 @@ class SettingsScreen extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        l10n.translate('font_family'),
+                        l10n.fontFamily,
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -190,7 +187,7 @@ class SettingsScreen extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        l10n.translate('seed_color'),
+                        l10n.seedColor,
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -252,16 +249,12 @@ class SettingsScreen extends ConsumerWidget {
                 ),
                 child: SwitchListTile(
                   title: Text(
-                    l10n.translate('sound'),
+                    l10n.sound,
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  subtitle: Text(
-                    soundEnabled
-                        ? l10n.translate('sound_on')
-                        : l10n.translate('sound_off'),
-                  ),
+                  subtitle: Text(soundEnabled ? l10n.soundOn : l10n.soundOff),
                   value: soundEnabled,
                   onChanged: (val) => soundNotifier.setEnabled(val),
                 ),
@@ -277,7 +270,7 @@ class SettingsScreen extends ConsumerWidget {
                   ),
                 ),
                 icon: const Icon(Icons.login),
-                label: Text(l10n.translate('back_to_login')),
+                label: Text(l10n.backToLogin),
                 onPressed: () => context.go('/login'),
               ),
             ],

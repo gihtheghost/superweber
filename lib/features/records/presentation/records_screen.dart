@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
+
 import '../../../core/localization/app_localizations.dart';
 import '../data/firestore_service.dart';
 
@@ -10,14 +11,11 @@ class RecordsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final firestoreService = ref.watch(firestoreServiceProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.translate('records_title')),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: Text(l10n.recordsTitle), centerTitle: true),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 600),
@@ -35,7 +33,7 @@ class RecordsScreen extends ConsumerWidget {
                         size: 50,
                       ),
                       const SizedBox(height: 16),
-                      Text(l10n.translate('loading')),
+                      Text(l10n.loading),
                     ],
                   ),
                 );
@@ -47,11 +45,17 @@ class RecordsScreen extends ConsumerWidget {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.inbox_outlined, size: 64, color: theme.disabledColor),
+                      Icon(
+                        Icons.inbox_outlined,
+                        size: 64,
+                        color: theme.disabledColor,
+                      ),
                       const SizedBox(height: 12),
                       Text(
-                        l10n.translate('no_records'),
-                        style: theme.textTheme.titleMedium?.copyWith(color: theme.disabledColor),
+                        l10n.noRecords,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: theme.disabledColor,
+                        ),
                       ),
                     ],
                   ),
@@ -59,12 +63,17 @@ class RecordsScreen extends ConsumerWidget {
               }
 
               return ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 itemCount: plates.length,
                 itemBuilder: (context, index) {
                   final plate = plates[index];
                   return Card(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     margin: const EdgeInsets.symmetric(vertical: 6),
                     child: ListTile(
                       leading: CircleAvatar(
@@ -78,10 +87,16 @@ class RecordsScreen extends ConsumerWidget {
                         ),
                       ),
                       title: Text(
-                        'Placa: $plate',
-                        style: const TextStyle(fontWeight: FontWeight.bold, letterSpacing: 2),
+                        l10n.plateLabel(plate),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 2,
+                        ),
                       ),
-                      trailing: const Icon(Icons.check_circle, color: Colors.green),
+                      trailing: const Icon(
+                        Icons.check_circle,
+                        color: Colors.green,
+                      ),
                     ),
                   );
                 },

@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:math' as math;
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../domain/engine/math_evaluator.dart';
 import '../../domain/models/difficulty_level.dart';
 import '../../domain/models/game_state.dart';
@@ -37,11 +39,7 @@ class GameController extends Notifier<GameState> {
   void _handleCarHitWeber() {
     final newHp = state.hp - 1;
     if (newHp <= 0) {
-      state = state.copyWith(
-        hp: 0,
-        isGameOver: true,
-        timeRemaining: 0,
-      );
+      state = state.copyWith(hp: 0, isGameOver: true, timeRemaining: 0);
       _timer?.cancel();
       _saveScoreToCloud();
     } else {
@@ -86,13 +84,21 @@ class GameController extends Notifier<GameState> {
   /// Attempts to insert an operator into a given slot.
   /// If [insertIndex] is provided, inserts at that position; otherwise appends.
   /// Returns false if rejected due to overflow (> 10000) or division by zero.
-  bool addOperatorToSlot(int slotIndex, OperatorToken token, {int? insertIndex}) {
+  bool addOperatorToSlot(
+    int slotIndex,
+    OperatorToken token, {
+    int? insertIndex,
+  }) {
     if (slotIndex < 0 || slotIndex >= 5) return false;
     if (state.isGameOver || state.isExploding) return false;
 
     // Build speculative slots
-    final newSlots = state.slots.map((s) => List<OperatorToken>.from(s)).toList();
-    if (insertIndex != null && insertIndex >= 0 && insertIndex <= newSlots[slotIndex].length) {
+    final newSlots = state.slots
+        .map((s) => List<OperatorToken>.from(s))
+        .toList();
+    if (insertIndex != null &&
+        insertIndex >= 0 &&
+        insertIndex <= newSlots[slotIndex].length) {
       newSlots[slotIndex].insert(insertIndex, token);
     } else {
       newSlots[slotIndex].add(token);
@@ -106,9 +112,7 @@ class GameController extends Notifier<GameState> {
     );
 
     if (!isAllowed) {
-      state = state.copyWith(
-        lastError: 'Ação rejeitada: excede 10.000 ou gera divisão por zero',
-      );
+      state = state.copyWith(lastError: 'action_rejected');
       return false;
     }
 
@@ -136,7 +140,9 @@ class GameController extends Notifier<GameState> {
     if (tokenIndex < 0 || tokenIndex >= state.slots[slotIndex].length) return;
     if (state.isGameOver || state.isExploding) return;
 
-    final newSlots = state.slots.map((s) => List<OperatorToken>.from(s)).toList();
+    final newSlots = state.slots
+        .map((s) => List<OperatorToken>.from(s))
+        .toList();
     newSlots[slotIndex].removeAt(tokenIndex);
 
     final evaluation = MathEvaluator.evaluate(
@@ -172,19 +178,14 @@ class GameController extends Notifier<GameState> {
 
   void surrender() {
     if (state.isGameOver) return;
-    state = state.copyWith(
-      hp: 0,
-      isGameOver: true,
-      timeRemaining: 0,
-    );
+    state = state.copyWith(hp: 0, isGameOver: true, timeRemaining: 0);
     _timer?.cancel();
     _saveScoreToCloud();
   }
 
   void restartRun() {
-    state = GameState.initial(difficulty: state.difficulty).copyWith(
-      solvedPlates: state.solvedPlates,
-    );
+    state = GameState.initial(difficulty: state.difficulty)
+        .copyWith(solvedPlates: state.solvedPlates);
     _startTimer();
   }
 
@@ -204,7 +205,8 @@ class GameController extends Notifier<GameState> {
 
   void _handleWinCondition() {
     final solvedPlate = state.plateString;
-    final updatedSolved = Set<String>.from(state.solvedPlates)..add(solvedPlate);
+    final updatedSolved = Set<String>.from(state.solvedPlates)
+      ..add(solvedPlate);
 
     state = state.copyWith(
       score: state.score + 1,
@@ -231,5 +233,6 @@ class GameController extends Notifier<GameState> {
   }
 }
 
-final gameControllerProvider =
-    NotifierProvider<GameController, GameState>(GameController.new);
+final gameControllerProvider = NotifierProvider<GameController, GameState>(
+  GameController.new,
+);

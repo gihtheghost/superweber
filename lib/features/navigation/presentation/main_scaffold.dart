@@ -20,7 +20,7 @@ class MainScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final selectedIndex = _calculateSelectedIndex(context);
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       body: child,
@@ -41,25 +41,25 @@ class MainScaffold extends StatelessWidget {
               _NavigationItem(
                 icon: Icons.psychology,
                 selected: selectedIndex == 0,
-                tooltip: l10n.translate('play'),
+                tooltip: l10n.play,
                 onTap: () => context.go('/game'),
               ),
               _NavigationItem(
                 icon: Icons.format_list_bulleted,
                 selected: selectedIndex == 1,
-                tooltip: l10n.translate('records_title'),
+                tooltip: l10n.recordsTitle,
                 onTap: () => context.go('/records'),
               ),
               _NavigationItem(
                 icon: Icons.settings,
                 selected: selectedIndex == 2,
-                tooltip: l10n.translate('settings'),
+                tooltip: l10n.settings,
                 onTap: () => context.go('/settings'),
               ),
               _NavigationItem(
                 icon: Icons.help_outline,
                 selected: false,
-                tooltip: l10n.translate('help'),
+                tooltip: l10n.help,
                 onTap: () => showHelpDialog(context),
               ),
             ],

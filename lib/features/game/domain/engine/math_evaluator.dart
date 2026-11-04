@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+
 import '../models/operator_token.dart';
 
 class MathException implements Exception {
@@ -46,7 +47,7 @@ class MathEvaluator {
       return EvaluationResult(
         isValid: false,
         isSolved: false,
-        errorMessage: 'Estrutura inválida',
+        errorMessage: 'invalid_structure',
         latex: latex,
       );
     }
@@ -55,7 +56,7 @@ class MathEvaluator {
       return EvaluationResult(
         isValid: false,
         isSolved: false,
-        errorMessage: 'É necessário inserir ao menos um operador entre cada par de dígitos',
+        errorMessage: 'need_operator',
         latex: latex,
       );
     }
@@ -84,7 +85,7 @@ class MathEvaluator {
       return EvaluationResult(
         isValid: false,
         isSolved: false,
-        errorMessage: 'Insira o símbolo de igual (=)',
+        errorMessage: 'need_equals',
         latex: latex,
       );
     }
@@ -93,7 +94,7 @@ class MathEvaluator {
       return EvaluationResult(
         isValid: false,
         isSolved: false,
-        errorMessage: 'Apenas um sinal de igual (=) é permitido',
+        errorMessage: 'multiple_equals',
         latex: latex,
       );
     }
@@ -106,14 +107,20 @@ class MathEvaluator {
       return EvaluationResult(
         isValid: false,
         isSolved: false,
-        errorMessage: 'A equação deve ter elementos nos dois lados',
+        errorMessage: 'both_sides_required',
         latex: latex,
       );
     }
 
     try {
-      final lhsVal = _Parser(lhsTokens, allowFractionalDivision).parseExpression();
-      final rhsVal = _Parser(rhsTokens, allowFractionalDivision).parseExpression();
+      final lhsVal = _Parser(
+        lhsTokens,
+        allowFractionalDivision,
+      ).parseExpression();
+      final rhsVal = _Parser(
+        rhsTokens,
+        allowFractionalDivision,
+      ).parseExpression();
 
       final solved = (lhsVal - rhsVal).abs() < epsilon;
       return EvaluationResult(
@@ -121,21 +128,21 @@ class MathEvaluator {
         isSolved: solved,
         lhsValue: lhsVal,
         rhsValue: rhsVal,
-        errorMessage: solved ? null : 'Os dois lados da equação são diferentes',
+        errorMessage: solved ? null : 'unequal_sides',
         latex: latex,
       );
     } on MathException catch (e) {
       return EvaluationResult(
         isValid: false,
         isSolved: false,
-        errorMessage: e.message,
+        errorMessage: e.code,
         latex: latex,
       );
     } catch (_) {
       return EvaluationResult(
         isValid: false,
         isSolved: false,
-        errorMessage: 'Expressão matemática inválida',
+        errorMessage: 'invalid_expression',
         latex: latex,
       );
     }
@@ -216,7 +223,8 @@ class MathEvaluator {
       } else if (t is OperatorToken) {
         switch (t.type) {
           case OperatorType.sqrt:
-            if (i + 1 < tokens.length && tokens[i + 1] == OperatorToken.parenOpen) {
+            if (i + 1 < tokens.length &&
+                tokens[i + 1] == OperatorToken.parenOpen) {
               final closeIdx = _findMatchingParen(tokens, i + 1);
               if (closeIdx != -1) {
                 final innerTokens = tokens.sublist(i + 2, closeIdx);
@@ -239,7 +247,8 @@ class MathEvaluator {
             break;
 
           case OperatorType.cbrt:
-            if (i + 1 < tokens.length && tokens[i + 1] == OperatorToken.parenOpen) {
+            if (i + 1 < tokens.length &&
+                tokens[i + 1] == OperatorToken.parenOpen) {
               final closeIdx = _findMatchingParen(tokens, i + 1);
               if (closeIdx != -1) {
                 final innerTokens = tokens.sublist(i + 2, closeIdx);
@@ -262,7 +271,8 @@ class MathEvaluator {
             break;
 
           case OperatorType.power:
-            if (i + 1 < tokens.length && tokens[i + 1] == OperatorToken.parenOpen) {
+            if (i + 1 < tokens.length &&
+                tokens[i + 1] == OperatorToken.parenOpen) {
               final closeIdx = _findMatchingParen(tokens, i + 1);
               if (closeIdx != -1) {
                 final innerTokens = tokens.sublist(i + 2, closeIdx);
@@ -433,7 +443,8 @@ class _Parser {
   double _parseMultiplicationDivision() {
     double left = _parsePower();
 
-    while (_current == OperatorToken.multiply || _current == OperatorToken.divide) {
+    while (_current == OperatorToken.multiply ||
+        _current == OperatorToken.divide) {
       final op = _current;
       _consume();
       final right = _parsePower();
@@ -446,7 +457,8 @@ class _Parser {
         }
         final divResult = left / right;
         if (!allowFractionalDivision) {
-          final isInteger = (divResult - divResult.round()).abs() < MathEvaluator.epsilon;
+          final isInteger =
+              (divResult - divResult.round()).abs() < MathEvaluator.epsilon;
           if (!isInteger) {
             throw const MathException('non_integer_div', 'Divisão não inteira');
           }
@@ -467,11 +479,17 @@ class _Parser {
       final exponent = _parsePower(); // right-associative
 
       if (exponent > 100 || base.abs() > 1000) {
-        throw const MathException('overflow', 'Exponenciação excede limites seguros');
+        throw const MathException(
+          'overflow',
+          'Exponenciação excede limites seguros',
+        );
       }
       final result = math.pow(base, exponent).toDouble();
       if (result.isNaN || result.isInfinite) {
-        throw const MathException('overflow', 'Resultado de exponenciação inválido');
+        throw const MathException(
+          'overflow',
+          'Resultado de exponenciação inválido',
+        );
       }
       _checkLimit(result);
       return result;
@@ -495,7 +513,10 @@ class _Parser {
       _consume();
       final inner = _parseUnary();
       if (inner < 0) {
-        throw const MathException('domain', 'Raiz quadrada de número negativo');
+        throw const MathException(
+          'square_root_domain',
+          'Raiz quadrada de número negativo',
+        );
       }
       final result = math.sqrt(inner);
       _checkLimit(result);
@@ -576,7 +597,10 @@ class _Parser {
 
   double _factorial(double n) {
     if (n < 0 || (n - n.round()).abs() > MathEvaluator.epsilon) {
-      throw const MathException('domain', 'Fatorial definido apenas para inteiros não negativos');
+      throw const MathException(
+        'factorial_domain',
+        'Fatorial definido apenas para inteiros não negativos',
+      );
     }
     final intVal = n.round();
     if (intVal > 7) {
@@ -592,7 +616,10 @@ class _Parser {
 
   void _checkLimit(double val) {
     if (val.abs() > MathEvaluator.maxAllowedValue) {
-      throw const MathException('overflow', 'Valor excede o limite máximo de 10.000');
+      throw const MathException(
+        'overflow',
+        'Valor excede o limite máximo de 10.000',
+      );
     }
   }
 }

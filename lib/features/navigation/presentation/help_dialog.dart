@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+
 import '../../../core/localization/app_localizations.dart';
 
 void showHelpDialog(BuildContext context) {
-  final l10n = AppLocalizations.of(context);
+  final l10n = AppLocalizations.of(context)!;
   final theme = Theme.of(context);
 
   showDialog(
@@ -15,22 +16,24 @@ void showHelpDialog(BuildContext context) {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              l10n.translate('help_title'),
-              style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+              l10n.helpTitle,
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ],
       ),
       content: SingleChildScrollView(
         child: Text(
-          l10n.translate('help_content'),
+          l10n.helpText,
           style: theme.textTheme.bodyMedium?.copyWith(height: 1.5),
         ),
       ),
       actions: [
         FilledButton(
           onPressed: () => Navigator.of(ctx).pop(),
-          child: Text(l10n.translate('close')),
+          child: Text(l10n.close),
         ),
       ],
     ),
