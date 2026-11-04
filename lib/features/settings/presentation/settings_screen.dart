@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -5,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/audio/sound_controller.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/theme/theme_provider.dart';
+import '../../game/presentation/controllers/game_controller.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -270,8 +272,12 @@ class SettingsScreen extends ConsumerWidget {
                   ),
                 ),
                 icon: const Icon(Icons.login),
-                label: Text(l10n.backToLogin),
-                onPressed: () => context.go('/login'),
+                label: Text(l10n.signOut),
+                onPressed: () async {
+                  await FirebaseAuth.instance.signOut();
+                  ref.invalidate(gameControllerProvider);
+                  if (context.mounted) context.go('/login');
+                },
               ),
             ],
           ),

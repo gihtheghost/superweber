@@ -6,10 +6,7 @@ class FirestoreService {
   final FirebaseFirestore? firestore;
   final FirebaseAuth? auth;
 
-  FirestoreService({
-    this.firestore,
-    this.auth,
-  });
+  FirestoreService({this.firestore, this.auth});
 
   String? get currentUserId => auth?.currentUser?.uid;
 
@@ -20,15 +17,17 @@ class FirestoreService {
 
     try {
       final userDoc = db.collection('users').doc(uid);
-      await userDoc.set({
+      final batch = db.batch();
+      batch.set(userDoc, {
+        'email': auth?.currentUser?.email,
         'lastScore': currentScore,
         'lastUpdated': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
-
-      await userDoc.collection('solved_plates').doc(plate).set({
+      batch.set(userDoc.collection('solved_plates').doc(plate), {
         'plate': plate,
         'solvedAt': FieldValue.serverTimestamp(),
       });
+      await batch.commit();
     } catch (_) {
       // Graceful fallback for mock or offline environment
     }
@@ -41,10 +40,17 @@ class FirestoreService {
 
     try {
       final userDoc = db.collection('users').doc(uid);
-      await userDoc.set({
-        'highScore': FieldValue.increment(0),
-        'lastScore': score,
-      }, SetOptions(merge: true));
+      await db.runTransaction((transaction) async {
+        final snapshot = await transaction.get(userDoc);
+        final previousHighScore =
+            (snapshot.data()?['highScore'] as num?)?.toInt() ?? 0;
+        transaction.set(userDoc, {
+          'email': auth?.currentUser?.email,
+          'highScore': score > previousHighScore ? score : previousHighScore,
+          'lastScore': score,
+          'lastUpdated': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+      });
     } catch (_) {}
   }
 

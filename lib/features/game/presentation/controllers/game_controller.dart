@@ -12,14 +12,46 @@ import '../../../records/data/firestore_service.dart';
 class GameController extends Notifier<GameState> {
   Timer? _timer;
   final math.Random _random = math.Random();
+  bool _isDisposed = false;
 
   @override
   GameState build() {
+    _isDisposed = false;
+    final initialState = GameState.initial();
+    final initialDigits = List.generate(4, (_) => _random.nextInt(10));
+    final initialSlots = List.generate(5, (_) => <OperatorToken>[]);
+    final initialGameState = initialState.copyWith(
+      digits: initialDigits,
+      slots: initialSlots,
+      evaluation: MathEvaluator.evaluate(
+        slots: initialSlots,
+        digits: initialDigits,
+        allowFractionalDivision:
+            initialState.difficulty.allowFractionalDivision,
+      ),
+    );
+
     _startTimer();
+    unawaited(_loadSolvedPlates());
     ref.onDispose(() {
+      _isDisposed = true;
       _timer?.cancel();
     });
-    return GameState.initial();
+    return initialGameState;
+  }
+
+  Future<void> _loadSolvedPlates() async {
+    final plates = await ref.read(firestoreServiceProvider).getSolvedPlates();
+    if (_isDisposed) return;
+
+    final solvedPlates = {...state.solvedPlates, ...plates};
+    if (solvedPlates.contains(state.plateString)) {
+      state = state.copyWith(solvedPlates: solvedPlates);
+      _spawnNextCar();
+      return;
+    }
+
+    state = state.copyWith(solvedPlates: solvedPlates);
   }
 
   void _startTimer() {
@@ -50,16 +82,16 @@ class GameController extends Notifier<GameState> {
   }
 
   List<int> _generateUnsolvedDigits() {
-    // Generate 4 random digits not yet in state.solvedPlates
-    for (int attempts = 0; attempts < 100; attempts++) {
-      final digits = List.generate(4, (_) => _random.nextInt(10));
-      final plateStr = digits.join();
-      if (!state.solvedPlates.contains(plateStr)) {
-        return digits;
-      }
+    final availablePlates = List.generate(
+      10000,
+      (number) => number.toString().padLeft(4, '0'),
+    ).where((plate) => !state.solvedPlates.contains(plate)).toList();
+    if (availablePlates.isEmpty) {
+      throw StateError('All four-digit plates have already been solved.');
     }
-    // Fallback if 100 attempts collide
-    return List.generate(4, (_) => _random.nextInt(10));
+
+    final plate = availablePlates[_random.nextInt(availablePlates.length)];
+    return plate.codeUnits.map((digit) => digit - 48).toList();
   }
 
   void _spawnNextCar() {

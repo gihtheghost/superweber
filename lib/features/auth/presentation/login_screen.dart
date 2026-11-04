@@ -23,7 +23,9 @@ class LoginScreen extends ConsumerWidget {
 
     final providers = <fb_auth.AuthProvider>[
       fb_auth.EmailAuthProvider(),
-      GoogleProvider(clientId: 'mock-google-client-id-for-superweber'),
+      GoogleProvider(
+        clientId: '744416865405-ivq2j65iqksmhhofe225r1smdnvg8c5h.apps.googleusercontent.com',
+      ),
     ];
 
     return Scaffold(
@@ -227,20 +229,6 @@ class LoginScreen extends ConsumerWidget {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      // Guest / Test access button
-                      OutlinedButton.icon(
-                        style: OutlinedButton.styleFrom(
-                          minimumSize: const Size.fromHeight(48),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        icon: const Icon(Icons.arrow_forward),
-                        label: Text(l10n.play),
-                        onPressed: () {
-                          context.go('/game');
-                        },
-                      ),
                     ],
                   ),
                 ),

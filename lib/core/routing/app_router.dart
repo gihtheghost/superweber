@@ -1,5 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/game/presentation/game_screen.dart';
 import '../../features/navigation/presentation/main_scaffold.dart';
@@ -14,10 +16,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: savedRoute,
     routes: [
-      GoRoute(
-        path: '/login',
-        builder: (context, state) => const LoginScreen(),
-      ),
+      GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       ShellRoute(
         builder: (context, state, child) {
           // Persist current route to SharedPreferences
@@ -25,10 +24,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           if (loc != '/login') {
             prefs?.setString('last_route', loc);
           }
-          return MainScaffold(
-            location: loc,
-            child: child,
-          );
+          return MainScaffold(location: loc, child: child);
         },
         routes: [
           GoRoute(
@@ -46,5 +42,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         ],
       ),
     ],
+    redirect: (context, state) async {
+      final isLoginRoute = state.matchedLocation == '/login';
+      try {
+        final auth = FirebaseAuth.instance;
+        final user = auth.currentUser ?? await auth.authStateChanges().first;
+        if (user == null && !isLoginRoute) return '/login';
+        if (user != null && isLoginRoute) return '/game';
+      } catch (_) {
+        if (!isLoginRoute) return '/login';
+      }
+      return null;
+    },
   );
 });

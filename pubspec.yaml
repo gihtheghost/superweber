@@ -87,6 +87,11 @@ flutter:
     - assets/weber_idle.png
     - assets/weber_sombra.png
 
+  fonts:
+    - family: SocialIcons
+      fonts:
+        - asset: packages/firebase_ui_auth/fonts/SocialIcons.ttf
+
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
 
