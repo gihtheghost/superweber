@@ -64,5 +64,10 @@
         "type": "String"
       }
     }
-  }
+  },
+  "semConta": "Don't have an account?",
+  "criaConta": "Create an account.",
+  "jaTemConta" : "Already have an account?",
+  "login" : "Login",
+  "or" : "or"
 }

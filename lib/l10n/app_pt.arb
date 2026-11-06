@@ -64,5 +64,10 @@
         "type": "String"
       }
     }
-  }
+  },
+  "semConta": "Não tem uma conta?",
+  "criaConta": "Criar conta.",
+  "jaTemConta": "Já tem uma conta?",
+  "login" : "Login",
+  "or" : "ou"
 }

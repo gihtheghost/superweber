@@ -49,6 +49,7 @@ dependencies:
   firebase_ui_localizations: ^2.1.0
   firebase_ui_oauth_google: ^2.1.1
   intl: ^0.20.3
+  google_fonts: ^9.0.0
 
 dev_dependencies:
   flutter_test:
@@ -86,6 +87,7 @@ flutter:
     - assets/weber_idle.gif
     - assets/weber_idle.png
     - assets/weber_sombra.png
+    - assets/borboletas.png
 
   fonts:
     - family: SocialIcons
