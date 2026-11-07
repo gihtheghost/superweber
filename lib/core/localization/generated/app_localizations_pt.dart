@@ -194,4 +194,19 @@ class AppLocalizationsPt extends AppLocalizations {
   String plateLabel(String plate) {
     return 'Placa: $plate';
   }
+
+  @override
+  String get semConta => 'Não tem uma conta?';
+
+  @override
+  String get criaConta => 'Criar conta.';
+
+  @override
+  String get jaTemConta => 'Já tem uma conta?';
+
+  @override
+  String get login => 'Login';
+
+  @override
+  String get or => 'ou';
 }

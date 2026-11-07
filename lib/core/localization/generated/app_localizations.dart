@@ -445,6 +445,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Plate: {plate}'**
   String plateLabel(String plate);
+
+  /// No description provided for @semConta.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t have an account?'**
+  String get semConta;
+
+  /// No description provided for @criaConta.
+  ///
+  /// In en, this message translates to:
+  /// **'Create an account.'**
+  String get criaConta;
+
+  /// No description provided for @jaTemConta.
+  ///
+  /// In en, this message translates to:
+  /// **'Already have an account?'**
+  String get jaTemConta;
+
+  /// No description provided for @login.
+  ///
+  /// In en, this message translates to:
+  /// **'Login'**
+  String get login;
+
+  /// No description provided for @or.
+  ///
+  /// In en, this message translates to:
+  /// **'or'**
+  String get or;
 }
 
 class _AppLocalizationsDelegate
