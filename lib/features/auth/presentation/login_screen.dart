@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:firebase_ui_auth/firebase_ui_auth.dart' as fb_auth;
 import 'package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart';
 import 'package:flutter/material.dart';
@@ -27,6 +25,9 @@ class LoginScreen extends ConsumerWidget {
     final gameState = ref.watch(gameControllerProvider);
     final l10n = AppLocalizations.of(context)!;
     final screenSize = MediaQuery.sizeOf(context);
+    
+    // Robust mobile detection (covers all portrait mobile devices & viewports < 900px)
+    final isMobile = screenSize.width < 900 || screenSize.width < screenSize.height;
 
     final emailProvider = fb_auth.EmailAuthProvider();
     final googleProvider = GoogleProvider(clientId: googleClientId);
@@ -42,42 +43,48 @@ class LoginScreen extends ConsumerWidget {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // 1. Center Layer: Enlarged Borboletas
-          Positioned.fill(
-            left: 800,
+          // 1. Butterfly: Centered on mobile; original offset (left: 800) on web
+          Positioned(
+            top: 0,
+            bottom: 0,
+            left: isMobile ? 0 : 800,
+            right: 0,
             child: IgnorePointer(
-              child: Transform.scale(
-                scale: 1.5,
-                child: Opacity(
-                  opacity: 0.85,
-                  child: Image.asset(
-                    borboletasAsset,
-                    fit: BoxFit.contain,
-                    alignment: Alignment.center,
+              child: Center(
+                child: Transform.scale(
+                  scale: isMobile ? 1.45 : 1.5,
+                  child: Opacity(
+                    opacity: 0.85,
+                    child: Image.asset(
+                      borboletasAsset,
+                      fit: BoxFit.contain,
+                      alignment: Alignment.center,
+                    ),
                   ),
                 ),
               ),
             ),
           ),
 
-          // 2. Left Layer: Weber Shadow
+          // 2. Weber Shadow: Bottom-center on mobile, bottom-left on web
           Positioned(
             left: 0,
+            right: isMobile ? 0 : null,
             bottom: 0,
-            width: screenSize.width * 0.42,
-            height: screenSize.height * 0.75,
+            width: isMobile ? null : screenSize.width * 0.42,
+            height: screenSize.height * (isMobile ? 0.55 : 0.75),
             child: IgnorePointer(
               child: Image.asset(
                 weberShadowAsset,
                 fit: BoxFit.contain,
-                alignment: Alignment.bottomLeft,
+                alignment: isMobile ? Alignment.bottomCenter : Alignment.bottomLeft,
               ),
             ),
           ),
 
-          // 3. Full-page Header: "weber vs world"
+          // 3. Top Header: Title
           Positioned(
-            top: 70,
+            top: isMobile ? 24 : 70,
             left: 20,
             right: 20,
             child: SafeArea(
@@ -86,13 +93,13 @@ class LoginScreen extends ConsumerWidget {
                 child: FittedBox(
                   fit: BoxFit.scaleDown,
                   child: Text(
-                    'weber vs mundo',
+                    'WEBER VS MUNDO',
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.sedgwickAve(
-                      fontSize: 100,
+                    style: GoogleFonts.gaegu(
+                      fontSize: isMobile ? 64 : 120,
                       letterSpacing: 2.5,
-                      color: Color.fromARGB(255, 255, 226, 255),
-                      fontWeight: FontWeight.w700,
+                      color: const Color.fromARGB(255, 255, 226, 255),
+                      fontWeight: FontWeight.w900,
                       shadows: [
                         Shadow(
                           offset: const Offset(3, 4),
@@ -107,10 +114,12 @@ class LoginScreen extends ConsumerWidget {
             ),
           ),
 
-          // 4. Center-Right Section: Cute Buttons
+          // 4. Buttons Section: Centered on mobile, center-right on web
           SafeArea(
             child: Align(
-              alignment: const Alignment(0.65, 0.15),
+              alignment: isMobile
+                  ? const Alignment(0, 0.45)
+                  : const Alignment(0.65, 0.15),
               child: SingleChildScrollView(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
@@ -134,7 +143,7 @@ class LoginScreen extends ConsumerWidget {
                           l10n,
                         ),
                       ),
-                      const SizedBox(height: 40),
+                      SizedBox(height: isMobile ? 18 : 40),
 
                       // Difficulty Button
                       _CuteMenuButton(
@@ -151,7 +160,7 @@ class LoginScreen extends ConsumerWidget {
                           l10n,
                         ),
                       ),
-                      const SizedBox(height: 40),
+                      SizedBox(height: isMobile ? 18 : 40),
 
                       // Language Button
                       _CuteMenuButton(
@@ -177,31 +186,21 @@ class LoginScreen extends ConsumerWidget {
             ),
           ),
 
-          // 5. Bottom Right: Small Developer Names
+          // 5. Developer Names: Container completely removed for both mobile and web
           Positioned(
             bottom: 14,
-            right: 18,
+            left: isMobile ? 0 : null,
+            right: isMobile ? 0 : 18,
             child: SafeArea(
               top: false,
               left: false,
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surface.withValues(alpha: 0.8),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color:
-                        theme.colorScheme.outlineVariant.withValues(alpha: 0.4),
-                  ),
-                ),
-                child: Text(
-                  l10n.authors,
-                  style: GoogleFonts.gaegu(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w400,
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
+              child: Text(
+                l10n.authors,
+                textAlign: isMobile ? TextAlign.center : TextAlign.right,
+                style: GoogleFonts.gaegu(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w400,
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
             ),
@@ -270,15 +269,12 @@ class LoginScreen extends ConsumerWidget {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // Email Form (Action: signIn)
                         fb_auth.LoginView(
                           action: fb_auth.AuthAction.signIn,
                           providers: [emailProvider],
                           showTitle: false,
                         ),
                         const SizedBox(height: 14),
-
-                        // Switch to Register Dialog
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -288,13 +284,13 @@ class LoginScreen extends ConsumerWidget {
                             ),
                             InkWell(
                               onTap: () {
-                                Navigator.of(dialogCtx).pop(); // Closes login dialog
+                                Navigator.of(dialogCtx).pop();
                                 _showRegisterDialog(
                                   context,
                                   emailProvider,
                                   googleProvider,
                                   l10n,
-                                ); // Opens register dialog
+                                );
                               },
                               child: Text(
                                 l10n.criaConta,
@@ -308,8 +304,6 @@ class LoginScreen extends ConsumerWidget {
                           ],
                         ),
                         const SizedBox(height: 16),
-
-                        // Divider
                         Row(
                           children: [
                             Expanded(
@@ -338,8 +332,6 @@ class LoginScreen extends ConsumerWidget {
                           ],
                         ),
                         const SizedBox(height: 16),
-
-                        // Google Sign-In
                         fb_auth.OAuthProviderButton(
                           provider: googleProvider,
                         ),
@@ -412,15 +404,12 @@ class LoginScreen extends ConsumerWidget {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // Email Form (Action: signUp)
                         fb_auth.LoginView(
                           action: fb_auth.AuthAction.signUp,
                           providers: [emailProvider],
                           showTitle: false,
                         ),
                         const SizedBox(height: 14),
-
-                        // Switch back to Login Dialog
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -430,13 +419,13 @@ class LoginScreen extends ConsumerWidget {
                             ),
                             InkWell(
                               onTap: () {
-                                Navigator.of(dialogCtx).pop(); // Closes register dialog
+                                Navigator.of(dialogCtx).pop();
                                 _showLoginDialog(
                                   context,
                                   emailProvider,
                                   googleProvider,
                                   l10n,
-                                ); // Opens login dialog
+                                );
                               },
                               child: Text(
                                 l10n.login,
@@ -450,8 +439,6 @@ class LoginScreen extends ConsumerWidget {
                           ],
                         ),
                         const SizedBox(height: 16),
-
-                        // Divider
                         Row(
                           children: [
                             Expanded(
@@ -480,8 +467,6 @@ class LoginScreen extends ConsumerWidget {
                           ],
                         ),
                         const SizedBox(height: 16),
-
-                        // Google Sign-In
                         fb_auth.OAuthProviderButton(
                           provider: googleProvider,
                         ),
@@ -620,6 +605,8 @@ class _CuteMenuButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isMobile = MediaQuery.sizeOf(context).width < 900 ||
+        MediaQuery.sizeOf(context).width < MediaQuery.sizeOf(context).height;
     final borderRadius = BorderRadius.circular(45);
 
     final bgColor = backgroundColor ??
@@ -633,7 +620,7 @@ class _CuteMenuButton extends StatelessWidget {
             : theme.colorScheme.onSurface);
 
     return Container(
-      height: 100,
+      height: isMobile ? 68 : 100,
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: borderRadius,
@@ -654,14 +641,14 @@ class _CuteMenuButton extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Row(
               children: [
-                Icon(icon, color: fgColor, size: 28),
+                Icon(icon, color: fgColor, size: isMobile ? 24 : 28),
                 const SizedBox(width: 14),
                 Expanded(
                   child: Text(
                     title,
                     style: GoogleFonts.gaegu(
                       color: fgColor,
-                      fontSize: 35,
+                      fontSize: isMobile ? 26 : 35,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
