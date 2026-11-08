@@ -69,5 +69,13 @@
   "criaConta": "Criar conta.",
   "jaTemConta": "Já tem uma conta?",
   "login" : "Login",
-  "or" : "ou"
+  "or" : "ou",
+  "playAsGuest": "Jogar como Convidado",
+  "selectDifficultyTitle": "Selecionar Dificuldade",
+  "confirm": "Confirmar",
+  "operators": "Operadores disponíveis:",
+  "easyDesc": "Permite divisão com resultado não inteiro (ex: 5/2). Aritmética básica, raízes, potências, fatorial, módulo, piso e teto.",
+  "intermediateDesc": "Divisões devem ser inteiras. Inclui raiz cúbica e potências.",
+  "advancedDesc": "Divisões devem ser inteiras. Raiz quadrada, fatorial, módulo e operações básicas.",
+  "hardDesc": "Divisões devem ser inteiras. Apenas as operações básicas, parênteses e módulo."
 }

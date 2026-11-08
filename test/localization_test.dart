@@ -22,7 +22,7 @@ void main() {
     await tester.pumpWidget(createApp());
 
     expect(
-      find.text('Criado por Ti Ribeiro Silvério e Giovanna Vieira Gaeta'),
+      find.text('Criado por Ti Ribeiro Silverio e Giovanna Vieira Gaeta'),
       findsOneWidget,
     );
     expect(find.text('Dificuldade'), findsOneWidget);
@@ -31,7 +31,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(
-      find.text('Created by Ti Ribeiro Silvério and Giovanna Vieira Gaeta'),
+      find.text('Created by Ti Ribeiro Silverio and Giovanna Vieira Gaeta'),
       findsOneWidget,
     );
     expect(find.text('Difficulty'), findsOneWidget);
@@ -42,7 +42,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(
-      find.text('Created by Ti Ribeiro Silvério and Giovanna Vieira Gaeta'),
+      find.text('Created by Ti Ribeiro Silverio and Giovanna Vieira Gaeta'),
       findsOneWidget,
     );
     expect(find.text('Difficulty'), findsOneWidget);

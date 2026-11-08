@@ -8,8 +8,6 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/theme/theme_provider.dart';
-import '../../game/domain/models/difficulty_level.dart';
-import '../../game/presentation/controllers/game_controller.dart';
 
 class LoginScreen extends ConsumerWidget {
   const LoginScreen({super.key});
@@ -23,7 +21,6 @@ class LoginScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final themeState = ref.watch(themeProvider);
-    final gameState = ref.watch(gameControllerProvider);
     final l10n = AppLocalizations.of(context)!;
     final screenSize = MediaQuery.sizeOf(context);
     
@@ -35,13 +32,6 @@ class LoginScreen extends ConsumerWidget {
 
     final emailProvider = fb_auth.EmailAuthProvider();
     final googleProvider = GoogleProvider(clientId: googleClientId);
-
-    final difficultyLabel = switch (gameState.difficulty) {
-      DifficultyLevel.easy => l10n.easy,
-      DifficultyLevel.intermediate => l10n.intermediate,
-      DifficultyLevel.advanced => l10n.advanced,
-      DifficultyLevel.hard => l10n.hard,
-    };
 
     return Scaffold(
       body: Stack(
@@ -133,11 +123,11 @@ class LoginScreen extends ConsumerWidget {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Play / Login Button
+                      // Play Button (Abre o diálogo de autenticação)
                       _CuteMenuButton(
-                        icon: Icons.play_arrow_rounded,
                         scale: scale,
-                        title: 'Login',
+                        icon: Icons.play_arrow_rounded,
+                        title: l10n.play,
                         backgroundColor:
                             const Color.fromARGB(255, 255, 146, 209),
                         foregroundColor: Colors.white,
@@ -150,28 +140,10 @@ class LoginScreen extends ConsumerWidget {
                       ),
                       SizedBox(height: isMobile ? 18 : 40 * scale),
 
-                      // Difficulty Button
-                      _CuteMenuButton(
-                        icon: Icons.sports_esports_rounded,
-                        scale: scale,
-                        title: l10n.difficulty,
-                        backgroundColor:
-                            const Color.fromARGB(255, 255, 146, 209),
-                        foregroundColor: Colors.white,
-                        valueBadge: difficultyLabel,
-                        onPressed: () => _showDifficultyDialog(
-                          context,
-                          ref,
-                          gameState.difficulty,
-                          l10n,
-                        ),
-                      ),
-                      SizedBox(height: isMobile ? 18 : 40 * scale),
-
                       // Language Button
                       _CuteMenuButton(
-                        icon: Icons.language_rounded,
                         scale: scale,
+                        icon: Icons.language_rounded,
                         title: l10n.selectLanguage,
                         backgroundColor:
                             const Color.fromARGB(255, 255, 146, 209),
@@ -263,14 +235,14 @@ class LoginScreen extends ConsumerWidget {
                         state,
                       ) {
                         Navigator.of(dialogCtx).pop();
-                        context.go('/game');
+                        context.go('/difficulty');
                       }),
                       fb_auth.AuthStateChangeAction<fb_auth.UserCreated>((
                         ctx,
                         state,
                       ) {
                         Navigator.of(dialogCtx).pop();
-                        context.go('/game');
+                        context.go('/difficulty');
                       }),
                     ],
                     child: Column(
@@ -342,6 +314,21 @@ class LoginScreen extends ConsumerWidget {
                         fb_auth.OAuthProviderButton(
                           provider: googleProvider,
                         ),
+                        const SizedBox(height: 16),
+                        OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            minimumSize: const Size.fromHeight(48),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                          icon: const Icon(Icons.person_outline_rounded),
+                          label: Text(l10n.playAsGuest),
+                          onPressed: () {
+                            Navigator.of(dialogCtx).pop();
+                            context.go('/difficulty');
+                          },
+                        ),
                       ],
                     ),
                   ),
@@ -398,14 +385,14 @@ class LoginScreen extends ConsumerWidget {
                         state,
                       ) {
                         Navigator.of(dialogCtx).pop();
-                        context.go('/game');
+                        context.go('/difficulty');
                       }),
                       fb_auth.AuthStateChangeAction<fb_auth.UserCreated>((
                         ctx,
                         state,
                       ) {
                         Navigator.of(dialogCtx).pop();
-                        context.go('/game');
+                        context.go('/difficulty');
                       }),
                     ],
                     child: Column(
@@ -537,54 +524,6 @@ class LoginScreen extends ConsumerWidget {
       ),
     );
   }
-
-  void _showDifficultyDialog(
-    BuildContext context,
-    WidgetRef ref,
-    DifficultyLevel currentDiff,
-    AppLocalizations l10n,
-  ) {
-    final theme = Theme.of(context);
-    final gameNotifier = ref.read(gameControllerProvider.notifier);
-
-    showDialog(
-      context: context,
-      builder: (dialogCtx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-        title: Row(
-          children: [
-            Icon(Icons.sports_esports_rounded,
-                color: theme.colorScheme.primary),
-            const SizedBox(width: 10),
-            Text(l10n.difficulty,
-                style: const TextStyle(fontWeight: FontWeight.bold)),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: DifficultyLevel.values.map((level) {
-            final label = switch (level) {
-              DifficultyLevel.easy => l10n.easy,
-              DifficultyLevel.intermediate => l10n.intermediate,
-              DifficultyLevel.advanced => l10n.advanced,
-              DifficultyLevel.hard => l10n.hard,
-            };
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 8.0),
-              child: _CuteOptionTile(
-                label: label,
-                isSelected: level == currentDiff,
-                onTap: () {
-                  gameNotifier.setDifficulty(level);
-                  Navigator.of(dialogCtx).pop();
-                },
-              ),
-            );
-          }).toList(),
-        ),
-      ),
-    );
-  }
 }
 
 // --- Cute Reusable UI Widgets ---
@@ -594,19 +533,16 @@ class _CuteMenuButton extends StatelessWidget {
   final String title;
   final String? valueBadge;
   final VoidCallback onPressed;
-  final bool isPrimary;
   final Color? backgroundColor;
   final Color? foregroundColor;
   final double scale;
 
   const _CuteMenuButton({
-    super.key,
     this.scale = 1.0,
     required this.icon,
     required this.title,
     this.valueBadge,
     required this.onPressed,
-    this.isPrimary = false,
     this.backgroundColor,
     this.foregroundColor,
   });
@@ -619,14 +555,9 @@ class _CuteMenuButton extends StatelessWidget {
     final borderRadius = BorderRadius.circular(45);
 
     final bgColor = backgroundColor ??
-        (isPrimary
-            ? theme.colorScheme.primary
-            : theme.colorScheme.surface.withValues(alpha: 0.94));
+        theme.colorScheme.surface.withValues(alpha: 0.94);
 
-    final fgColor = foregroundColor ??
-        (isPrimary
-            ? theme.colorScheme.onPrimary
-            : theme.colorScheme.onSurface);
+    final fgColor = foregroundColor ?? theme.colorScheme.onSurface;
 
     return Container(
       height: isMobile ? 68 : 100 * scale,
@@ -635,7 +566,7 @@ class _CuteMenuButton extends StatelessWidget {
         borderRadius: borderRadius,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: isPrimary ? 0.28 : 0.12),
+            color: Colors.black.withValues(alpha: 0.12),
             blurRadius: 14,
             offset: const Offset(0, 6),
           ),
@@ -669,17 +600,13 @@ class _CuteMenuButton extends StatelessWidget {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: isPrimary
-                          ? Colors.white.withValues(alpha: 0.2)
-                          : theme.colorScheme.primaryContainer,
+                      color: theme.colorScheme.primaryContainer,
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Text(
                       valueBadge!,
                       style: TextStyle(
-                        color: isPrimary
-                            ? fgColor
-                            : theme.colorScheme.onPrimaryContainer,
+                        color: theme.colorScheme.onPrimaryContainer,
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
                       ),
