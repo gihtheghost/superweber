@@ -49,4 +49,4 @@ app.*.map.json
 ajustes.txt
 
 /linux
-lib/core/localization/generated/
+lib/core/localization/generated/*
