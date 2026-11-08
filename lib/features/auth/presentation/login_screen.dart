@@ -1,4 +1,5 @@
 import 'package:firebase_ui_auth/firebase_ui_auth.dart' as fb_auth;
+import 'dart:math' as math;
 import 'package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -28,6 +29,9 @@ class LoginScreen extends ConsumerWidget {
     
     // Robust mobile detection (covers all portrait mobile devices & viewports < 900px)
     final isMobile = screenSize.width < 900 || screenSize.width < screenSize.height;
+    final scale = isMobile
+    ? 1.0
+    : math.min(screenSize.height / 1080.0, screenSize.width / 1920.0).clamp(0.5, 1.2);
 
     final emailProvider = fb_auth.EmailAuthProvider();
     final googleProvider = GoogleProvider(clientId: googleClientId);
@@ -47,12 +51,12 @@ class LoginScreen extends ConsumerWidget {
           Positioned(
             top: 0,
             bottom: 0,
-            left: isMobile ? 0 : 800,
+            left: isMobile ? 0 : screenSize.width * 0.42,
             right: 0,
             child: IgnorePointer(
               child: Center(
                 child: Transform.scale(
-                  scale: isMobile ? 1.45 : 1.5,
+                  scale: 1.5,
                   child: Opacity(
                     opacity: 0.85,
                     child: Image.asset(
@@ -84,7 +88,7 @@ class LoginScreen extends ConsumerWidget {
 
           // 3. Top Header: Title
           Positioned(
-            top: isMobile ? 24 : 70,
+            top: isMobile ? 24 : 70 * scale,
             left: 20,
             right: 20,
             child: SafeArea(
@@ -93,11 +97,11 @@ class LoginScreen extends ConsumerWidget {
                 child: FittedBox(
                   fit: BoxFit.scaleDown,
                   child: Text(
-                    'WEBER VS MUNDO',
+                    l10n.appTitle,
                     textAlign: TextAlign.center,
                     style: GoogleFonts.gaegu(
-                      fontSize: isMobile ? 64 : 120,
-                      letterSpacing: 2.5,
+                      fontSize: isMobile ? 64 : 120 * scale,
+                      letterSpacing: 2.5 * scale,
                       color: const Color.fromARGB(255, 255, 226, 255),
                       fontWeight: FontWeight.w900,
                       shadows: [
@@ -124,7 +128,7 @@ class LoginScreen extends ConsumerWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 500),
+                  constraints: BoxConstraints(maxWidth: isMobile ? 500 : 500 * scale),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -132,6 +136,7 @@ class LoginScreen extends ConsumerWidget {
                       // Play / Login Button
                       _CuteMenuButton(
                         icon: Icons.play_arrow_rounded,
+                        scale: scale,
                         title: 'Login',
                         backgroundColor:
                             const Color.fromARGB(255, 255, 146, 209),
@@ -143,11 +148,12 @@ class LoginScreen extends ConsumerWidget {
                           l10n,
                         ),
                       ),
-                      SizedBox(height: isMobile ? 18 : 40),
+                      SizedBox(height: isMobile ? 18 : 40 * scale),
 
                       // Difficulty Button
                       _CuteMenuButton(
                         icon: Icons.sports_esports_rounded,
+                        scale: scale,
                         title: l10n.difficulty,
                         backgroundColor:
                             const Color.fromARGB(255, 255, 146, 209),
@@ -160,11 +166,12 @@ class LoginScreen extends ConsumerWidget {
                           l10n,
                         ),
                       ),
-                      SizedBox(height: isMobile ? 18 : 40),
+                      SizedBox(height: isMobile ? 18 : 40 * scale),
 
                       // Language Button
                       _CuteMenuButton(
                         icon: Icons.language_rounded,
+                        scale: scale,
                         title: l10n.selectLanguage,
                         backgroundColor:
                             const Color.fromARGB(255, 255, 146, 209),
@@ -188,9 +195,9 @@ class LoginScreen extends ConsumerWidget {
 
           // 5. Developer Names: Container completely removed for both mobile and web
           Positioned(
-            bottom: 14,
+            bottom: isMobile ? 14 : 14 * scale,
+            right: isMobile ? 0 : 18 * scale,
             left: isMobile ? 0 : null,
-            right: isMobile ? 0 : 18,
             child: SafeArea(
               top: false,
               left: false,
@@ -198,7 +205,7 @@ class LoginScreen extends ConsumerWidget {
                 l10n.authors,
                 textAlign: isMobile ? TextAlign.center : TextAlign.right,
                 style: GoogleFonts.gaegu(
-                  fontSize: 18,
+                  fontSize: isMobile ? 18 : 18 * scale,
                   fontWeight: FontWeight.w400,
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -590,9 +597,11 @@ class _CuteMenuButton extends StatelessWidget {
   final bool isPrimary;
   final Color? backgroundColor;
   final Color? foregroundColor;
+  final double scale;
 
   const _CuteMenuButton({
     super.key,
+    this.scale = 1.0,
     required this.icon,
     required this.title,
     this.valueBadge,
@@ -620,7 +629,7 @@ class _CuteMenuButton extends StatelessWidget {
             : theme.colorScheme.onSurface);
 
     return Container(
-      height: isMobile ? 68 : 100,
+      height: isMobile ? 68 : 100 * scale,
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: borderRadius,
@@ -641,14 +650,14 @@ class _CuteMenuButton extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Row(
               children: [
-                Icon(icon, color: fgColor, size: isMobile ? 24 : 28),
+                Icon(icon, color: fgColor, size: isMobile ? 24 : 28 * scale),
                 const SizedBox(width: 14),
                 Expanded(
                   child: Text(
                     title,
                     style: GoogleFonts.gaegu(
                       color: fgColor,
-                      fontSize: isMobile ? 26 : 35,
+                      fontSize: isMobile ? 26 : 35 * scale,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
